@@ -1,0 +1,14 @@
+﻿<div class="row">
+    @foreach (var doc in Model)
+    {
+    <div class="col doc-thumb thumb-small">
+        <div class="text-center">
+            <a href="@Url.Action("Item","Documents",new { Id=doc.Id})">
+                <img src="@Url.Link("GetDocThumb",new { Id = doc.Id, n = 1 })" />
+            </a>
+            <div class="title"><a href="@Url.Action("Item","Documents",new { Id=doc.Id})">@doc.Title</a></div>
+        </div>
+        </div>
+        }
+
+    </div>

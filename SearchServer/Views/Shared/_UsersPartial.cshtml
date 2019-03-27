@@ -1,0 +1,19 @@
+﻿<div id="@ViewData["Id"]">
+    <titled-users-list :users="users"></titled-users-list>
+</div>
+<script>
+    new Vue({
+        el: "#@ViewData["Id"]",
+        data: {
+            users: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model))
+        },
+        methods: {
+            changed: function (user) {
+                this.users = user.SubscribesToUsers;
+            }
+        },
+        mounted: function() {
+            VueBus.$on('user-state-changed', this.changed);
+        }
+    });
+</script>

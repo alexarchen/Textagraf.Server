@@ -1,0 +1,517 @@
+﻿@model SearchServer.Models.DocModel
+
+@{
+    ViewData["Title"] = Model.Title;
+    bool ShowImages = true;
+    ViewData["docmenu"] = "<docmenu :doc='doc' :iliked='ILiked' :zoom='zoom' :comments='cmts' :istouch='istouch' download-url='" + Url.Action("Download", new { Id = Model.Id }) + "' v-on:zoomin='zoomin()' v-on:zoomout='zoomout()' v-on:defzoom='setzoom(1)' v-on:mark='mark()'></docmenu>";
+    ViewData["docLayout"] = true;
+    ViewData["og:image"] = Url.Link("GetDocThumb", new { Id = Model.Id, n = 1 });
+
+    var set1 = new Newtonsoft.Json.JsonSerializerSettings();
+    set1.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+
+}
+
+<div id="docapp">
+
+    <div id='doc_container' class='doc_container_normal p-0 p-sm-1'>
+
+        @if (!ViewBag.IsEPub)
+        {
+            @Html.Raw(ViewData["body"])
+
+        }
+
+    </div>
+
+
+</div>
+
+@if (Model.Format == DocModel.DocFormat.EPub)
+{
+    <script src="~/lib/epub/epub.js" asp-append-version="true"></script>
+    <script>
+
+
+            var book = ePub("@Model.opfUrl");
+            var rendition = book.renderTo("doc_container", {
+                manager: "continuous", spread: "none",
+                flow: "scrolled" ,/* stylesheet: "data:text/css,body{width:100% !important}" */
+        });
+
+
+            book.ready.then(result => {
+
+//                try {
+//                    document.createEvent('TouchEvent');
+                    window.removeEventListener("resize", rendition.manager.stage.resizeFunc);
+ //               }
+ //               catch (e) {
+ //               }
+
+                var $ul = $("<ul id='epub-nav' class='navbar-nav d-block'><li class='nav-item h4'>Contents</li></ul>");
+
+                var starthref = "";
+                var ppp = document.location.href.split('#');
+                if (ppp.length > 1) {
+                    starthref = ppp[1] + (ppp.length > 2 ? "#" + ppp[2] : "");
+                }
+
+                book.navigation.forEach(function (item) {
+                    var $sel = $("#CurrPageSel");
+                    $("<li class='nav-item'><a href='javascript:goto(\"" + item.href + "\")' class='nav-link'>" + item.label + "</a></li>").appendTo($ul);
+                    $("<option value ='" + item.href + "\'>" + item.label + "</option>").appendTo($sel);
+                    if (starthref.startsWith(item.href)) $sel[0].selectedIndex = $sel[0].childElementCount - 1;
+                    item.subitems.forEach(function (item) {
+                        $("<li class='ml-3 nav-item'><a href='javascript:goto(\"" + item.href + "\")' class='nav-link'>- " + item.label + "</a></li>").appendTo($ul);
+                        $("<option value ='" + item.href + "\'> - " + item.label + "</option>").appendTo($sel);
+                        if (item.href == starthref) $sel[0].selectedIndex = $sel[0].childElementCount - 1;
+                    });
+                });
+                $("#doc-nav-place").html($ul.html());
+                $ul.append($("<li class='nav-item h4'>Menu</li>"));
+                $ul.insertBefore($(".left-menu"));
+                $("<hr/>").insertBefore($(".left-menu"));
+
+                $("#doc-nav-place").removeClass("d-none");
+                if (starthref != "")
+                    rendition.display(starthref).then(function () {
+                        goto(starthref);
+                    });
+                else rendition.display();
+            }); // then
+
+
+
+        $(window).scroll(function () {
+            // define current page
+            var page = "";
+            rendition.manager.views.forEach(function (el) {
+                rect = el.element.getBoundingClientRect();
+                if (rect.bottom > $(window).height() / 2) {
+                    if (page == "")
+                        page = rendition.manager.location[el.contents.sectionIndex].href;
+                }
+            });
+
+            // TODO: seach subsection
+            if (!book.navigation.tocByHref[page]) {
+                var closest = "";
+
+                book.navigation.forEach(function (item) {
+                    if (item.href.startsWith(page))
+                        if (closest == '') closest = item.href;
+                });
+                page = closest;
+            }
+            PageChanged(page);
+        });
+
+        function goto(str) {
+            var base = str.split("#")[0];
+            var anchor = base != str ? str.split("#")[1] : "";
+            var spine = book.spine.get(base);
+            rendition.display(base).then(result => {
+                //"epubcfi(" + spine.cfiBase + "!/4/1:0)"
+                var el = rendition.getContents().filter(el => el.cfiBase == spine.cfiBase)[0];
+                //doc.body.scrollIntoView();
+                var pos = $(el.window.frameElement.parentElement).position().top;
+                if (anchor != '') {
+                    pos+= $(el.document.getElementById(anchor)).position().top;
+                }
+                pos -= ($("#main-menu").height() * 1.2);
+                window.scrollTo(0, pos);
+            });
+        }
+    </script>
+}
+else
+{
+    <script>
+
+    function IsPageVisible(Page) {
+
+        view_height = $(window).height();
+        rect = Page.getBoundingClientRect();
+        _top = rect.y | rect.top;//+Page.parentElement.offsetTop;
+        pH = rect.height;
+        //pH*=2; // load prev page
+        view_height += pH*2; // preload next pages
+
+        $el = $(window);
+
+        if ((view_height >= _top) &&
+            (0 <= _top + pH))
+            return (true);
+     return (false);
+}
+
+Array.prototype.contains = function (obj) {
+    var i = this.length;
+    while (i--) {
+        if (this[i] === obj) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function PageLoaded(p) {
+
+}
+
+function ReloadPages()
+ {
+    var view_height = $(window).height();
+    var mindist = 12344350;
+    var st = 0;//$(window).scrollTop();
+
+    var currpage = $('.pf').length - 1;
+
+    $('.pf').each(function (index, el) {
+        rect = el.getBoundingClientRect();
+        _top = rect.y | rect.top;//+Page.parentElement.offsetTop;
+        if (_top > st + view_height / 2) { currpage = index - 1; return false; }
+    });
+
+//    app.currpage = currpage + 1;
+
+    // call currpagechanged
+    if (typeof (PageChanged) != 'undefined')
+        PageChanged(Math.max(1,currpage + 1));
+
+
+        $('.pf').each(function (index, el) {
+        // is visible
+        if (IsPageVisible(el)) {
+
+            if (el.className.indexOf('loaded_page') < 0) {
+
+                $(el).addClass('loaded_page');
+                $(el).find("img").each(function () {
+                    var obj = $("<object style='min-height:" + this.clientHeight*0.75 + "px;' data='" + this.dataset["src"] + "' type='image/svg+xml'></object>");
+//                    setTimeout(function () { obj[0].height = ''; }, 2000);
+                    $(this).replaceWith(obj);
+//                    this.src = this.dataset["src"];
+                    //this.style = this.dataset["style"];
+                });
+                
+                /*$(el).find("object").each(function () {
+                        this.data = this.dataset["src"];
+                        this.style = this.dataset["style"];
+                 });*/
+
+                /*
+                console.log("load page " + (index + 1));
+
+                if ((@(ShowImages?1:0)) || (index == 0)) {
+                    var path = "@Url.Action("Item","docs",new { Id = Model.Id })/" + (index + 1) + ".page";
+                    //        path = path.slice(0, path.lastIndexOf("/") + 1);
+                    var obj = $(el);//$("<div></div>");
+                        // $(el).append(obj);
+                        $.get(path, function (data) {
+                            obj.html($(data).html());
+                            MarkWords(obj);
+                    });
+                }
+                    else {
+                    el.innerHTML = "";
+
+                }
+    */
+
+            }
+
+        } //vis
+
+    });
+
+}
+
+
+var MaxHeight;
+
+    function ResizeContent()
+    {
+      var maxW = 100;
+      $("#page-container .pf").each(function () { if (this.clientWidth > maxW) maxW = this.clientWidth; });
+      var ratio = app.zoom * $("#page-container").width() * 0.99 / maxW;
+
+
+            $("#page-container").css({
+//                transform: 'scale(' + app.zoom + ')',
+//                transformOrigin: 'left top',
+                //                height: (MaxHeight * ratio).toPrecision(4) + "px"
+                width: app.zoom * 100 + "%"
+            })
+
+    }
+
+   $(window).scroll(function () {
+            ReloadPages();
+        });
+
+
+
+$(document).ready(function(){
+
+    ReloadPages();
+    MaxHeight = $("#page-container").height();
+   // ResizeContent();
+
+   /* $(window).resize(function () {
+        ResizeContent();
+    });
+    */
+    $sel = $("#CurrPageSel");
+    for (var q = 0; q < $("#page-container .pf").length; q++)
+        $sel.append($("<option value='" + (q + 1) + "'>" + (q + 1) + "</option>"));
+
+    $("#page-container a").each(function () {
+        this.href = "javascript:app.markclicked('"+this.name+"')";
+    });
+
+ });
+
+    </script>
+
+
+}
+
+<h3>Comments</h3>
+<div id="comments">
+    <comments can-del="@(User.IsInRole("Admin")?"true":"false")" url="@Url.RouteUrl("Comments",new { Id=Model.Id})" can-post="@ViewBag.CanPostComment.ToString().ToLower()" post-url="@Url.RouteUrl("PostComment", new { Id = Model.Id })" v-on:comments-changed="comchanged"></comments>
+    <a name="Comments"></a>
+</div>
+
+<script src="~/js/comments.js?@(DateTime.Now.Ticks)"></script>
+
+@if (ViewBag.searchResult != null)
+{
+    <script src="~/lib/mark/jquery.mark.js"></script>
+    <script>
+    function MarkWords(el)
+    {
+        $(el).mark([@Html.Raw(((List<string>)ViewBag.foundWords).Select(s=>$"'{s}'").Aggregate((a,b)=>$"{a},{b}"))]);
+    }
+    </script>
+}
+else
+{
+    <script>
+        function MarkWords(el) { }
+    </script>
+}
+
+<partial name="_Bookmarks" />
+
+<script type='text/javascript'>
+
+    var currPage = "";
+
+    function PageChanged(page) {
+
+        currPage = page;
+        window.history.replaceState({}, "", (page <= 1 ? "#" : ("#" + page)));
+        if (document.getElementById("CurrPageSel").value != page)
+            document.getElementById("CurrPageSel").value = page;
+    }
+
+    function SetPage(p) {
+                //   $(window).scrollTop($("#pf" + p)[0].offsetTop+30);
+        if (typeof (goto)!= 'undefined') goto(p);
+        else
+         document.location.href = "#" + p;
+     }
+
+
+        var comments = new Vue({
+        el: '#comments',
+    data: {
+
+        user: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.User))
+        },
+        methods: {
+            comchanged: function (cmts) {
+        this.$emit("comments-changed", cmts);
+    }
+}
+        });
+
+    Vue.component('docmenu', {
+        props: ["doc", "iliked", "comments", "istouch", "zoom","downloadUrl"],
+        template:`<div class="text-nowrap d-flex justify-content-between pl-2">
+         <label><i v-if="!istouch" class="far fa-file-alt"></i><select class="bg-dark ml-2" id='CurrPageSel' onchange='SetPage(this.value)'></select></label>
+         <nav class="d-flex bg-dark">
+        <a class="" href="" :disabled='@((ViewBag.userId==null).ToString().ToLower())' v-on:click.prevent="$emit('mark')"><i class="far fa-bookmark"></i></a>
+        <a class="" href="#Comments"><i class="far fa-comment"></i></a>
+        <a href="javascript:app.Like()" class="" id='like'>
+            <i v-if="!iliked" class="far fa-heart"></i>
+            <i v-if="iliked" class="fa fa-heart text-danger"></i>
+           {{doc.Likes.length}}
+        </a>
+        
+        <div class="dropdown">
+            <a class="" href="#" role="button" id="dropdownShare" data-toggle="dropdown" aria-haspopup="false" aria-expanded="false">
+                <i class="fas fa-share-alt"></i>
+            </a>
+            <div class="dropdown-menu" aria-labelledby="dropdownShare">
+              @await Html.PartialAsync("_Share")
+            </div>
+        </div>
+
+        <a v-if="!istouch" href="" v-on:click.prevent="$emit('zoomin')"><i class="fas fa-search-plus"></i></a>
+        <a v-if="!istouch" href="" v-on:click.prevent="$emit('defzoom')">{{Math.round(zoom*100)}}%</a>
+        <a v-if="!istouch" href="" v-on:click.prevent="$emit('zoomout')"><i class="fas fa-search-minus"></i></a>
+        <a v-if="downloadUrl!=''" :href="downloadUrl"><i class="fas fa-download"></i></a>
+
+        <div class="collapse" id="doc-nav-place">
+
+        </div>
+    </nav></div>`
+    });
+
+
+    var app = new Vue({
+        el: "#docmenu",
+        data: {
+            doc: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(@Model,set1)),
+            ILiked: @(ViewBag.ILiked?"true":"false"),
+            zoom: 1,
+            cmts: new Array(),
+            istouch: false
+        },
+        mounted: function () {
+            var app = this;
+
+            // set bookmarks
+            if (this.doc.Bookmarks != null) {
+                this.doc.Bookmarks.forEach(function (bm) {
+                    $("#page-container a[name=" + bm.Page + "]").addClass("marked");
+                    $("#page-container a[name=" + bm.Page + "]")[0].title = bm.Name;
+                });
+            }
+
+           comments.$on("comments-changed", function (cmts) {
+          app.cmts = cmts;
+          })
+            this.istouch = this.isTouchDevice();
+        },
+        methods: {
+            markclicked: function (m) {
+                //TODO: show dialog
+            },
+            unmark: function (m) {
+                // TODO: unmark
+                $("#page-container a[name=" + m + "]").removeClass("marked");
+            },
+           mark: function (name) {
+               var app = this;
+               if (!name) {
+                   $('#bookmarksModal').modal('show')
+                   $('#bookmarksModal .btn-primary').one('click', function () {
+
+                       // mark page
+                       app.mark($('#bookmarksModal input').val());
+                   });
+               }
+               else {
+
+                   // make ajax request
+                   $.ajax({
+                       url: "/api/Bookmarks/@Model.Id/" + currPage, type: "POST", data: new FormData($('#bookmarksModal form')[0]), contentType: false,
+                       processData: false,
+                       cache: false,
+                       dataType: 'json', success: function (data) {
+                            if (data.error) alert(data.error);
+
+                           $("#page-container a[name=" + currPage + "]").addClass("marked");
+                           $("#page-container a[name=" + currPage + "]")[0].title += m+"\n";
+                            VueBus.$emit("user-state-changed", data.User);
+                        }
+                    });
+
+               }
+
+            },
+isTouchDevice: function ()
+{
+    try {
+        document.createEvent('TouchEvent');
+        return true;
+    }
+    catch (e)
+    {
+        return false;
+    }
+
+},
+            zoomin: function () {
+                this.zoom = Math.min(3, this.zoom + 0.25);
+
+ResizeContent();
+},
+            setzoom: function (z) {
+    this.zoom = z;
+    ResizeContent();
+},
+            zoomout: function () {
+    this.zoom = Math.max(0.5, this.zoom - 0.25);
+    ResizeContent();
+},
+            Like: function () {
+    var app = this;
+                $.getJSON("@Url.RouteUrl("DocLike", new { Id = Model.Id })", function (data) {
+        app.doc.Likes = data.Likes;
+        app.ILiked = data.ILiked;
+        VueBus.$emit("user-state-changed", data.Liker);
+        VueBus.$emit("doc-changed", app.doc);
+    });
+}
+
+        }
+
+     });
+
+
+    new Vue({
+el: "#docapp",
+        data: {
+    doc: {Reads: Array, Likes: Array}
+    },
+        mounted: function () {
+        this.doc = app.doc;
+        var dapp = this;
+        VueBus.$on("doc-changed", function (fdoc) {
+            dapp.doc = fdoc;
+        })
+        }
+});
+
+
+function DocKeyDown(e)
+{
+    if (!e) e = window.event;
+
+    if (e.keyCode==34) //PgDown
+    {
+        scroll_window(1);
+        return (false);
+    }
+    else
+    if (e.keyCode==33) // PgUp
+    {
+        scroll_window(-1);
+
+        return (false);
+
+    }
+}
+
+document.onkeydown = DocKeyDown;
+
+
+</script>
+
+
+

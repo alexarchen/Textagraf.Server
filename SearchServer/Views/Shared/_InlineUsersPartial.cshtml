@@ -1,0 +1,8 @@
+﻿<span>
+    @foreach (var user in Model)
+    {
+            <a class='tumb-xxs' href="@Url.Link("UserPage",new { Id = user.Id })">
+                <img src="@(user.ImageUrl!=null?user.ImageUrl:"/images/no_avatar.png")" class="rounded-circle"/>
+            </a>
+    }
+</span>

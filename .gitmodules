@@ -1,0 +1,4 @@
+$ cat .gitmodules 
+[submodule "docodo"]
+      path = Docodo
+      url = https://github.com/alexarchen/Docodo

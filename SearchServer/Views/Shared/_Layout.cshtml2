@@ -1,0 +1,182 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using SearchServer.Models
+@using SearchServer.Controllers
+@using Microsoft.EntityFrameworkCore;
+
+@inject SignInManager<User> SignInManager;
+@inject UserContext _context;
+@{
+    UsersController.UserModel user = null;
+    if (SignInManager.IsSignedIn(User))
+    {
+        int userId = (await SignInManager.UserManager.GetUserAsync(User)).Id;
+        user = new UsersController.UserModel(_context.User.Include(u => u.SubscribesToGroups).ThenInclude(s => s.Group).Include(u => u.AdminOfGroups).ThenInclude(ga => ga.Group).Include(u => u.Likes).ThenInclude(l => l.Document).Include(u => u.SubscribesToUsers).ThenInclude(s => s.ToUser).Include(u => u.Participate).ThenInclude(gu => gu.Group).First(u => u.Id == userId));
+    }
+    bool docLayout = false;
+    @if ((ViewContext.RouteData.Values.ContainsKey("controller")) && (ViewContext.RouteData.Values["controller"].Equals("Documents"))
+&& (ViewContext.RouteData.Values["action"].ToString().ToLower().Equals("item")))
+    {
+        docLayout = true;
+    }
+
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - SearchServer</title>
+
+    <link href="https://fonts.googleapis.com/css?family=Merriweather+Sans" rel="stylesheet">
+
+    <environment include="Development">
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+        <link rel="stylesheet" href="~/lib/jqueryui/jquery-ui.css" />
+        <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    </environment>
+    <environment exclude="Development">
+        <link rel="stylesheet" href="https://ajax.aspnetcdn.com/ajax/bootstrap/3.3.7/css/bootstrap.min.css"
+              asp-fallback-href="~/lib/bootstrap/dist/css/bootstrap.min.css"
+              asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute" />
+        <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true" />
+    </environment>
+    <environment include="Development">
+        <script src="~/lib/jquery/dist/jquery.js"></script>
+        <script src="~/lib/jqueryui/jquery-ui.js"></script>
+        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.js"></script>
+    </environment>
+    <environment exclude="Development">
+        <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-3.3.1.min.js"
+                asp-fallback-src="~/lib/jquery/dist/jquery.min.js"
+                asp-fallback-test="window.jQuery"
+                crossorigin="anonymous"
+                integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT">
+        </script>
+        <script src="https://ajax.aspnetcdn.com/ajax/bootstrap/3.3.7/bootstrap.min.js"
+                asp-fallback-src="~/lib/bootstrap/dist/js/bootstrap.min.js"
+                asp-fallback-test="window.jQuery && window.jQuery.fn && window.jQuery.fn.modal"
+                crossorigin="anonymous"
+                integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa">
+        </script>
+    </environment>
+    <script src="~/js/jquery.sticky-kit.min.js" asp-append-version="false"></script>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css" integrity="sha384-gfdkjb5BdAXd+lj+gudLWI+BXq4IuLW5IT+brZEZsLFm++aCMlF1V92rMkPaX4PP" crossorigin="anonymous">
+    <link rel="stylesheet" href="~/css/pdf.css" asp-append-version="true" />
+    <script src="~/lib/vue/vue.js"></script>
+    <script src="~/lib/moment/moment-with-locales.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <link rel="stylesheet" href="~/lib/rrssb/css/rrssb.css" asp-append-version="true" />
+    
+    <meta property="og:title" content="@ViewData["Title"]" />
+    <meta property="og:description" content="@ViewData["Description"]" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="@Context.Request.Host@Context.Request.Path" />
+    <meta property="og:image" content="/images/publish.png" />
+
+    @Html.Raw(ViewData["Headers"])
+
+
+</head>
+<body>
+
+        <partial name="_CookieConsentPartial" />
+
+        <nav class="navbar navbar-expand-md sticky-top navbar-dark bg-dark" id="main-menu">
+            <a class="navbar-brand" href="/">SearchServer</a>
+            <div id="search" class="w-50"><partial name="_SearchPartial" /></div>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav">
+                    <li class="login row"><partial name="_LoginPartial" /></li>
+                </ul>
+                <div class="">
+                    <ul class="navbar-nav mr-auto">
+                        <li id="search_place"></li>
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            <partial name="_LeftMenu" model="user" view-data="@(new ViewDataDictionary(ViewData) { { "LeftMenuItemClass", "left-menu-item d-md-none" } })" />
+                        }
+
+                        <li class="nav-item">
+                            <a class="btn btn-primary" asp-controller="Documents" asp-action="Create" asp-all-route-data='new Dictionary<string,string> { {"GroupId" , (((ViewContext.RouteData.Values.ContainsKey("Controller")) && (ViewContext.RouteData.Values["Controller"].Equals("Groups")))?ViewContext.RouteData.Values["Id"]?.ToString():null)}, {"ReturnUrl" , ViewContext.HttpContext.Request.Path}}'>Publish</a>
+                        </li>
+
+                        <li class="nav-item">
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <a class="nav-link" asp-controller="Search" asp-action="Settings">Settings</a>
+
+                            }
+                            else
+                            {
+                                <a class="nav-link" asp-controller="Home" asp-action="Help">Help</a>
+                            }
+                        </li>
+                    </ul>
+
+                </div>
+            </div>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+        </nav>
+
+
+        <div class="container-full body-content">
+
+            <div class="row">
+                <div class="col-@(docLayout?"4":"2") d-none d-md-block">
+                    <div class="sticky">
+                        <ul class="left-menu navbar-nav">
+                            @if (SignInManager.IsSignedIn(User))
+                            {
+                                <partial name="_LeftMenu" model="user" />
+                            }
+                            else
+                            {
+
+                            }
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-2 d-none @(docLayout?"":"d-lg-block")">
+                    @if (SignInManager.IsSignedIn(User))
+                    {
+                        <div class="sticky">
+                            <h3>Groups</h3>
+                            <partial name="_GroupsPartial" model="user.AdminOfGroups.Concat(user.Participate).Concat(user.SubscribesToGroups).GroupBy(g=>g.Id).Select(g=>g.First()).ToList()" view-data="@(new ViewDataDictionary(ViewData){{ "Id" , "_mygroupspartial"}})" />
+                            <h3>Subsribes</h3>
+                            <partial name="_UsersPartial" model="user.SubscribesToUsers" view-data="@(new ViewDataDictionary(ViewData){{ "Id" , "_myuserspartial"}})" />
+                            <h3>You Like</h3>
+                            <partial name="_XSDocsListPartial" model="user.Likes.OrderByDescending(l=>l.DateTime).Take(5)" />
+                        </div>
+                    }
+                    else
+                    {
+
+
+                    }
+
+                </div>
+
+
+                <div class="@(((!SignInManager.IsSignedIn(User)) && (Context.Request.Path.Value.Equals("/")))?"col-12":"col-md-10 col-lg-8") content">
+
+                    @RenderBody()
+                </div>
+            </div>
+
+            <hr />
+            <footer class="bg-dark w-100 text-white-50">
+                &copy; 2018 - SearchServer
+                <span class="float-right"><a href="@Url.Action("Contact","Home")"> Support </a></span>
+            </footer>
+        </div>
+
+   
+
+    @RenderSection("Scripts", required: false)
+
+
+</body>
+</html>

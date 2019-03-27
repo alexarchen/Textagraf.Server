@@ -1,0 +1,33 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using SearchServer.Models
+
+<form action="/Search" class="mr-3 rounded-pill">
+    <div class="input-group">
+        <input class="form-control search-control" autocomplete="off" data-suggests='@(Url.Action("Suggest", "Search")+"?q=")' type="search" name="q" />
+        <div class="input-group-append">
+            <button class="btn bg-white text-black-50" type="submit"><i class="fas fa-search"></i></button>
+            <button class="btn bg-white text-black-50 d-none d-md-block" type="button" data-target="#searchmore" data-toggle="collapse" aria-controls="searchmore"><i class="far fa-caret-square-down"></i></button>
+        </div>
+    </div>
+    <div class="collapse" id="searchmore">
+        @if ((ViewContext.RouteData.Values.ContainsKey("controller")) && (ViewContext.RouteData.Values["controller"].Equals("Documents"))
+     && (ViewContext.RouteData.Values["action"].ToString().ToLower().Equals("item")))
+        {
+            <div class="form-check">
+                <label><input type="checkbox" data-value="@ViewContext.RouteData.Values["Id"]" checked class="form-check-input" onchange="this.nextSibling.value=this.checked?this.dataset['value']:''" /><input type="hidden" name="doc" value="@ViewContext.RouteData.Values["Id"]" />in Document</label>
+            </div>
+        }
+        else if ((ViewContext.RouteData.Values.ContainsKey("controller")) && (ViewContext.RouteData.Values["controller"].Equals("Groups"))
+        && (ViewContext.RouteData.Values["action"].ToString().ToLower().Equals("id")))
+        {
+            <div class="form-check">
+                <label><input type="checkbox" checked data-value="@ViewContext.RouteData.Values["Id"]" class="form-check-input" onchange="this.nextSibling.value=this.checked?this.dataset['value']:''"/><input type="hidden" name="group" value="@ViewContext.RouteData.Values["Id"]" />in Group</label>
+                
+            </div>
+
+        }
+
+        <div class="form-group"><label for="search-tags" class="col-form-label col-form-label-sm">Tags</label><input id="search-tags" type="text" class="form-control form-control-sm" name="Tags" /></div>
+        <div class="form-group"><label for="search-title" class="col-form-label col-form-label-sm">Title</label><input id="search-title" type="text" class="form-control form-control-sm" name="Title" /></div>
+    </div>
+</form>

@@ -1,0 +1,41 @@
+﻿@using SearchServer.Models
+@model List<DocModel>
+
+<section class="bg-primary text-center text-white w-100">
+    <div class="container thumb-normal">
+        <div class="m-2 rounded-circle d-inline-block bg-dark thumb-small p-5">
+         <img src="/images/publish.png" class="img-fluid ">
+        </div>
+        <h1>Publish documents, articles, books online for FREE!</h1>
+        <hr class="star-light bg-primary" />
+        <h3 class="font-weight-light">Textagraf - portal of authors publications. You are free to publish, discuss, subscribe, like ...</h3>
+        <br />
+    </div>
+</section>
+<section class="text-center w-100 thumb-normal">
+    <img src="~/images/screens.png" class="m-2" />
+    <h1>Share and view your documents on all devices</h1>
+    <hr class="star-dark" />
+    <h3 class="font-weight-light">Organize your private or public cloud library.<br />Use <a href="@Url.Action("help","Home")">API</a> to embed documents to your site.</h3>
+    <object width="250" height="350" type="text/html" data="@Url.Action("object","docs",new { Id = Model.Where(d=>d.Format!=DocModel.DocFormat.EPub).First().Id})">
+    </object>
+    <br />
+</section>
+<section class="bg-dark text-white text-center w-100 thumb-normal">
+    <div class="m-2 rounded-circle d-inline-block bg-primary thumb-small p-5">
+        <img src="/images/search.png" class="img-fluid ">
+    </div>
+    <h1>Search your library</h1>
+    <hr class="star-light bg-dark" />
+    <h3 class="font-weight-light">Add full-text search functionality to your library or website using API</h3>
+    <br />
+</section>
+<section class="text-center w-100 thumb-normal">
+    <h1>Popular documents</h1>
+    <hr class="star-dark" />
+    <div class="container-fluid">
+        <!-- @((bool)ViewData["FromCache"]?"FromCache":"")-->
+        <partial name="_DocsListPartial" model="@Model" />
+    </div>
+    <br />
+</section>

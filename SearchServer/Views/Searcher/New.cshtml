@@ -1,0 +1,74 @@
+﻿@model SessionIndexModel
+
+<h2>Create index</h2>
+
+<div id="creating" class="row @(Model.IsCreating?"":"invisible")">
+    Please wait while index is creating...<br />
+    Status: <span id="creating_status"></span>
+</div>
+<script>
+    function startWait() {
+
+        $("creating").removeClass("invisible");
+        $("create").addClass("invisible");
+
+        setInterval(function () {
+            $(jQuery).load("GetState", function (response) {
+                $("#creating_status").html(response);
+                if (JSON.parse(response).status == 0) {
+                    document.location.href = "Try";
+                    //                window.clearInterval(int);
+                    //                $("#creating").hide();
+                    //                $("#searching").show();
+                }
+            })
+        }, 2000);
+    }
+</script>
+
+
+
+<div id="create">
+    @using (Html.BeginForm())
+    {
+            <div class="form-group">
+                <div class="form-group-lg">Languages:</div>
+                @Html.ListBox("Languages", new SelectList(ViewBag.Languages))
+            </div>
+
+            <div class="form-group">
+                <label>
+                    Source type:
+                    @Html.DropDownList("Type", new SelectList(Enum.GetNames(typeof(SessionIndexModel.TypeEnum))))
+                </label>
+            </div>
+            <div class="form-group">
+                <label>
+                    Path
+                    @Html.Editor("Path")
+                </label>
+            </div>
+            <button type="submit">Create</button>
+        }
+
+        <script>
+            $("#create_form").submit(function (e) {
+
+                var form = $(this);
+                var url = form.attr('action');
+
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: form.serialize(), // serializes the form's elements.
+                    success: function (data) {
+                        alert(data); // show response from the php script.
+                    }
+                });
+
+                e.preventDefault(); // avoid to execute the actual submit of the form.
+                startWait();
+            });
+        </script>
+
+    </div>

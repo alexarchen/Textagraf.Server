@@ -1,0 +1,133 @@
+﻿@using Microsoft.AspNetCore.Identity;
+@using SearchServer.Models;
+@inject SignInManager<User> smngr;
+@{
+    int userid = 0;
+    User user = await smngr.UserManager.GetUserAsync(User);
+    if (user != null) { userid = user.Id; }
+
+    string GetDocThumbClass(DocModel doc)
+    {
+
+        if (doc.Format == DocModel.DocFormat.Pdf)
+        {
+            return "thin";
+            if (doc.TitlePage == DocTitlePageType.BWText)
+            {
+                if (doc.Pages <= 2) return "thin paperclip";
+                if (doc.Pages <= 8) return "thick1 paperclip";
+                if (doc.Pages <= 30) return "thick2 paperclip";
+                return "thick3 docrings";
+            }
+            else
+            if (doc.TitlePage == DocTitlePageType.BWTitle)
+            {
+                if (doc.Pages <= 2) return "thin paperclip";
+                if (doc.Pages <= 8) return "thick1 paperclip";
+                if (doc.Pages <= 30) return "thick2 docrings";
+                return "thick3 docrings";
+
+            }
+            else
+            {
+                if (doc.Pages <= 2) return "thin";
+                if (doc.Pages <= 8) return "thick1";
+                if (doc.Pages <= 30) return "thick2";
+                return "thick3";
+
+            }
+        }
+        else return "book";
+        return "";
+    }
+}
+
+
+<div class="row text-left" id="app">
+
+    @foreach (var doc in Model)
+    {
+       
+            <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6 col-12 col doc-col">
+                <div class="doc-media mb-2">
+                    
+                        <div class="doc-thumb mb-2">
+                            <div class="@GetDocThumbClass(doc)">
+<!----                                <div class="flip" data-n="@doc.Pages" data-href="@Url.Action("Item","Documents",new { Id=doc.Id})" data-src="@Url.Link("GetDocBody",new { Id = doc.Id })/page">
+                                    <img class="lazyload" src="@Url.Link("GetDocThumb",new { Id = doc.Id, n = 1 })" data-src="@Url.Link("GetDocPreview",new { Id = doc.Id, n = 1 })" />
+                                    </div> -->
+                                @if (doc.IsReady)
+                                {
+                                 <textagraf data-type="@(doc.Format == DocModel.DocFormat.EPub ? "book" : "")" data-n="@Math.Min(10, (int)doc.Pages)" data-src="@Url.Action("Item", "docs", new { Id = doc.Id })" data-width="100%"></textagraf>
+                                }
+                                else
+                                {
+                                    <img src="~/images/processing.jpg" />
+                                }
+                            </div>
+                        </div>
+                        <a href="@Url.Action("Item","Documents",new { Id=doc.Id})"></a>
+                    <div class="doc-title rounded-bottom">
+                        <div class="d-flex justify-content-between">
+                            <div class="caption"><a href="@Url.Action("Item","Documents",new { Id=doc.Id})">@doc.Title</a></div>
+                            <div class="col-1 text-right dropleft">
+                                <a href="javascript:" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="doc-menu-@doc.Id"><i class="fas fa-ellipsis-v"></i></a>
+                                <div class="dropdown-menu" aria-labelledby="doc-menu-@doc.Id">
+                                    @if ((doc.User.Id == userid) || User.IsInRole("Admin"))
+                                    {
+                                        <a class="dropdown-item" href="@Url.Action("Edit","Documents",new { Id = doc.Id})"><i class="fas fa-edit"></i> Edit</a>
+                                        <a class="dropdown-item" asp-route="DeleteDoc" asp-route-id="@doc.Id"  data-ajax-success="document.location.reload()" data-method="delete" data-confirm="Are you sure to delete document?" data-ajax="true"><i class="fas fa-trash-alt"></i> Delete</a>
+                                        if (User.IsInRole("Admin"))
+                                        {
+                                            <a class="dropdown-item" asp-route="ProcessDoc" asp-route-id="@doc.Id" data-ajax-success="alert('OK')" data-ajax="true">Process</a>
+                                        }
+                                    }
+                                </div>
+                            </div> 
+                        </div>
+                        <div class="d-flex">
+                                @if (doc.Group != null)
+                                {
+                                    <a class='w-50 font-weight-light thumb-xxs text-truncate small' href="@doc.Group.Link"><img class="rounded-circle mr-1" src="@doc.Group.Image" />@doc.Group.Name</a>
+                                    <a class='w-50 font-weight-light thumb-xxs text-truncate small' href="/@@@doc.User.Name"><img class="rounded-circle mr-1" src="@doc.User.Image" />@doc.User.Name</a>
+
+                                }
+                                else
+                                {
+                                    <a class='w-50 font-weight-light thumb-xxs text-truncate small' href="@Url.Action("Id", "Users", new { Id = doc.User.Id })"><img class="rounded-circle mr-1" src="@(doc.User.ImageUrl != null ? doc.User.ImageUrl : "/images/no_avatar.png")" />@doc.User.Name</a>
+                                }
+                        </div>
+                        <div class="small doc-description">@doc.Description</div>
+                        <div class="small d-flex justify-content-between">
+                            <div class="text-secondary">@Utils.FormatDate(doc.DateTime)</div>
+                            <div class="text-right"><i class="far fa-file-alt"></i> @doc.Pages <i class="far fa-heart"></i> @doc.Likes.Count <i class="far fa-eye"></i> @doc.Reads.Count</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        
+
+    }
+
+</div>
+
+<script>
+    function likedoc(id) {
+        $.getJSON("api/docs/" + id + "/like", function (data) {
+            //data.Likes;
+            //data.ILiked;
+            VueBus.$emit("user-state-changed", data.Liker);
+        });
+    }
+
+        //$(".flip").makeflip();
+    $(window).resize(function () {
+        //$(".flip").trigger('resize')
+        $(".doc-col").updatecolumns();
+    });
+    window.onload=function () {
+        $(".doc-col").updatecolumns();
+    };
+    
+</script>

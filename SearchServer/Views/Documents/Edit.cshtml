@@ -1,0 +1,62 @@
+﻿@model SearchServer.Models.DocModel
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h2>Edit</h2>
+
+<h4>Document @Model.Id</h4>
+<hr />
+<div class="row" id="app">
+    <div class="col-md-8">
+        <form asp-action="Edit" id="form" data-ajax="true">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <input type="hidden" asp-for="TempFileName" value="1" />
+            <div class="form-group">
+                <label asp-for="Title" class="control-label"></label>
+                <input asp-for="Title" class="form-control" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Tags" class="control-label"></label>
+                <input name="Tags" type="hidden" class="form-control" :value="tags.join(';')" />
+                <tags-list :items="tags" :hints="tags_list" horz="true"></tags-list>
+                <span asp-validation-for="Tags" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Description" class="control-label"></label>
+                <textarea cols="40" row="6" asp-for="Description" class="form-control" ></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Access" class="control-label"></label>
+                <select asp-for="Access" class="form-control" asp-items="Html.GetEnumSelectList<Document.DocAccess>()"></select>
+                <span asp-validation-for="Access" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+                @if (User.IsInRole("Admin"))
+                {
+                  <a href="/api/docs/@Model.Id/process" value="Process" class="btn btn-secondary">Process</a>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<script>
+
+    new Vue({
+        el: "#app",
+        data: {
+
+           tags: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject((Model.Tags!=null?Model.Tags.Split(';'):new string[] { }))),
+           tags_list: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject((Model.Group!=null&&Model.Group.Tags!=null?Model.Group.Tags.Split(';'):new string[] { })))
+
+        }
+    });
+
+    </script>

@@ -1,0 +1,26 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using SearchServer.Models
+@using SearchServer.Controllers
+@inject SignInManager<User> SignInManager
+@inject UserManager<User> UserManager
+
+@if (SignInManager.IsSignedIn(User))
+{
+    var user = new UserModel(await @UserManager.GetUserAsync(User));
+
+    <div class="thumb-xxs mr-2">
+        <a asp-controller="Users" asp-action="Edit" title="Edit Profile"><img src="@(user.ImageUrl!=null?user.ImageUrl:"/images/no_avatar.png")" class="rounded-circle"></a>
+        <div class="">
+            <a asp-controller="Users" asp-action="Edit" title="Edit Profile">@user.Name</a>
+        </div>
+    </div>
+
+    <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Context.Request.Path" method="post" id="logoutForm" class="form-inline my-2 my-lg-0">
+        <button type="submit" class="btn btn-outline-light my-2 my-sm-0">Log out</button>
+    </form>
+}
+else
+{
+    <a asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="@Context.Request.Path" class="btn btn-outline-light my-2 my-sm-0">Log in</a>
+
+}

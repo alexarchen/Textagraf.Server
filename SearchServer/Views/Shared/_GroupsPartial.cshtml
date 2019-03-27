@@ -1,0 +1,20 @@
+﻿<div id="@ViewData["Id"]">
+    <titled-groups-list :groups="groups"></titled-groups-list>
+</div>
+<script>
+    new Vue({
+        el: "#@ViewData["Id"]",
+        data: {
+            groups: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model))
+        },
+        methods: {
+            changed: function (user) {
+                this.groups = unique(user.AdminOfGroups.concat(user.Participate, user.SubscribesToGroups));
+            }
+        },
+        mounted: function () {
+            VueBus.$on('user-state-changed', this.changed);
+        }
+    });
+</script>
+

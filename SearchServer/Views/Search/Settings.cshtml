@@ -1,0 +1,37 @@
+﻿@model SearchServer.Controllers.SearchController.SettingsModel
+@{
+    ViewData["Title"] = "Index Settings";
+
+}
+
+<h2>@ViewData["Title"]</h2>
+
+@if (Model.IsCreating)
+{
+    <div>Index is creating, please wait...</div>
+
+    <script>
+        setInterval(function () {
+            $.getJSON("@Url.Action("GetState")", function (o) {
+                if (!o.IsCreating)
+                    document.location.reload();
+            });
+        }, 5000);
+    </script>
+
+}
+else
+{
+    <div>Index size: @Model.IndexSize, contains @Model.nIndexWords different words.</div>
+    <br>
+    <button data-url="@Url.Action("Update","Search")" id="Update">Update index</button>
+
+    <script>
+        $('#Update').click(function () {
+           $.get(this.dataset["url"],function(){
+
+            document.location.reload();
+           });
+        });
+    </script>
+}

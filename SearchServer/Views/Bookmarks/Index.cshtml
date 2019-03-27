@@ -1,0 +1,19 @@
+﻿@model IEnumerable<SearchServer.Models.BookmarkModel>
+
+@{
+    ViewData["Title"] = "Bookmarks";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<table class="">
+    <thead><tr><td>Label</td><td>Document</td></tr></thead>
+    @foreach (var item in Model)
+    {
+
+     <tr class=""><td><a href="@Url.Action("Item","docs",new { Id = item.DocumentId})/#@item.Page">@item.Name</a></td><td>@item.Document.Title (@item.Page)</td></tr>
+
+    }
+ </table>
+
+

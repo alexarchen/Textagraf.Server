@@ -1,0 +1,8 @@
+@model IEnumerable<SearchServer.Models.DocModel>
+
+@{
+    ViewData["Title"] = "My Recent Likes";
+}
+<h1>@ViewData["Title"]</h1>
+
+<partial name="_DocsListPartial" model="@Model" />

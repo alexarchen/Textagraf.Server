@@ -1,0 +1,14 @@
+@{
+    ViewData["Title"] = Model.Title;
+}
+<h1>@Model.Title</h1>
+Document is processing...
+<div class="text-danger">@ViewData["Error"]</div>
+
+@if (ViewBag.CanEdit)
+{
+    <div>
+        <a asp-action="Edit" asp-route-id="@Model.Id"><i class="fas fa-edit h3"></i></a>
+        <a asp-action="apiDelete" asp-route-id="@Model.Id" data-method="delete" data-confirm="Are you sure to delete document?" data-ajax="true"><i class="fas fa-trash-alt h3"></i></a>
+    </div>
+}

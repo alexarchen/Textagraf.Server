@@ -1,0 +1,509 @@
+﻿/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification\ 
+for details on configuring this project to bundle and minify static web assets. */
+body {
+font-family: Segoe UI, Helvetica;
+}
+
+/* Wrapping element */
+/* Set some basic padding to keep content from hitting the edges */
+.body-content {
+}
+#doc_container
+{
+max-width:820px;  
+margin:auto;
+}
+
+/* Hide/rearrange for smaller screens */
+@media screen and (max-width: 767px) {
+    /* Hide captions */
+    .carousel-caption {
+        display: none;
+    }
+}
+
+.doc-media {
+}
+
+.doc-thumb{
+/*
+    height: 0;
+    padding-bottom: 150%;
+    position: relative;
+    overflow:hidden;
+*/
+    background-color: #fff;
+}
+
+.half-thumb{
+/*  padding-bottom:65%;*/
+  overflow:hidden;
+}
+
+.doc-thumb a img
+{
+   max-width: 100%;
+}
+
+.doc-thumb .thin .textagrafdoc, .doc-thumb .book {
+    box-shadow: 0px 2px 15px 4px rgba(50, 50, 55, 0.24);
+}
+.doc-thumb .thick1 .textagrafdoc{
+    box-shadow: 1px 1px rgba(90,90,90,0.3), 2px 2px rgba(255,255,255,0.7), 3px 3px rgba(90,90,90,0.2), 3px 3px 9px 5px rgba(50, 50, 55, 0.25);
+}
+.doc-thumb .thick2 .textagrafdoc{
+ box-shadow: 1px 1px rgba(90,90,90,0.3), 2px 2px rgba(255,255,255,0.8), 3px 3px rgba(90,90,90,0.3), 4px 4px rgba(255,255,255,0.7), 5px 5px rgba(90,90,90,0.2), 4px 4px 14px 7px rgba(50, 50, 55, 0.23);
+}
+/*.doc-thumb .thick3 .textagrafdoc, .doc-thumb .book {
+ box-shadow: 1px 1px rgba(90,90,90,0.3), 2px 2px rgba(255,255,255,0.6), 3px 3px rgba(90,90,90,0.3), 4px 4px rgba(255,255,255,0.5), 5px 5px rgba(90,90,90,0.3), 6px 6px rgba(255,255,255,0.5), 7px 7px rgba(90,90,90,0.2), 4px 4px 14px 7px rgba(50, 50, 55, 0.23);
+}
+ */
+
+div.papderclip:before{
+height: 3rem;
+width: 100%;
+content: "";
+background: url('/images/paperclip.png') 20% no-repeat;
+position: absolute;
+margin-left: -0.5rem;
+background-size: contain;
+margin-top: -0.5rem;
+display: inline-block;
+z-index:100;
+}
+
+.doc-title {
+ padding:0.2rem;
+ max-height:12rem;
+}
+.doc-title .caption{
+   max-height: 2.5em;
+    line-height: 1.25em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.doc-title a{
+ font-weight:bold;
+ text-decoration:none;
+}
+.doc-description{
+ max-height:4.5em;
+ line-height: 1.5em;
+ overflow:hidden;
+}
+
+.thumb {
+text-align:center;
+}
+
+.thumb-normal > img {
+ width:12rem;
+}
+
+.thumb-small img {
+ width:6rem;
+}
+.thumb-xs img {
+ width:48px;
+}
+
+.thumb-xxs img {
+ width:32px;
+}
+
+#doc_container
+{
+}
+
+.loaded_page{ background-color:#fff;}
+
+.pageNo
+{
+ font:120px Arial;
+ color: #ddd;
+ position: absolute;
+ left:45%;
+ top:45%;
+}
+.loaded_page .pageNo {
+display: none;
+}
+
+/* Comments */
+
+#comments .media
+{
+ padding:10px;
+}
+.ui-autocomplete{
+z-index:1000;
+}
+.media-body .author {
+  display: inline-block;
+  font-size: 1rem;
+  color: #000;
+  font-weight: 700;
+}
+.media-body .metadata {
+  display: inline-block;
+  margin-left: .5rem;
+  color: #777;
+  font-size: .8125rem;
+}
+.footer-comment {
+  color: #777;
+}
+.vote.plus:hover {
+  color: green;
+}
+.vote.minus:hover {
+  color: red;
+}
+.vote {
+  cursor: pointer;
+}
+.comment-reply a {
+  color: #777;
+}
+.comment-reply a:hover, .comment-reply a:focus {
+  color: #000;
+  text-decoration: none;
+}
+.devide {
+  padding: 0px 4px;
+  font-size: 0.9em;
+}
+.media-text {
+  margin-bottom: 0.25rem;
+}
+.title-comments {
+  font-size: 1.4rem;
+  font-weight: bold;
+  line-height: 1.5rem;
+  color: rgba(0, 0, 0, .87);
+  margin-bottom: 1rem;
+  padding-bottom: .25rem;
+  border-bottom: 1px solid rgba(34, 36, 38, .15);
+}
+
+
+.navbar-toggler:not(.collapsed)
+{
+ display: block !important;
+}
+
+
+.bg-dark a, .bg-dark label
+{
+ color: rgba(255, 255, 255, 0.5);
+}
+
+#docmenu i{
+ font-size:150%;
+}
+#docmenu nav a{
+ padding-left:1em;
+ padding-right:1em;
+}
+
+#docmenu *{
+ color:#fff;
+ 
+}
+.sticky {
+z-index:101;
+}
+#docmenu button, select, option{
+ border:0px;
+}
+.left-menu-item{
+ list-style: none;
+ white-space: nowrap;
+}
+
+#main-menu{
+ z-index:1000;
+ flex-wrap:nowrap;
+}
+h1, h2, .caption {
+ font-family: 'Vollkorn', serif;
+}
+#main-menu .navbar-brand{
+ font-family: 'Vollkorn', serif;
+ font-size: 1.8rem;
+ line-height: 1rem;
+}
+#main-menu .navbar-brand:first-letter{
+ font-size: 2.5rem;
+ font-family: 'Cookie', cursive;
+}
+
+.show button{
+ display:block !important;
+}
+
+.searchmore{
+
+}
+
+#main-menu .login
+{
+ max-height:3.5em;
+}
+
+.bg-dark .h4 {
+ color: #009edf;
+}
+
+.summary
+{
+ line-height:1.2;
+}
+.search-results b{
+color: red;
+}
+.lef-menu .nav-link 
+{
+ paddgin: 0.3rem, 1rem;
+}
+
+hr.star-dark, hr.star-light {
+    max-width: 15rem;
+    padding: 0;
+    text-align: center;
+    border: none;
+    border-top: solid .25rem;
+    margin-top: 2.5rem;
+    margin-bottom: 2.5rem;
+    margin-left: auto;
+    margin-right: auto;
+}
+hr.star-light {
+    border-color: #fff;
+}
+    hr.star-dark:after, hr.star-light:after {
+        position: relative;
+        top: -.8em;
+        display: inline-block;
+        padding: 0 .25em;
+        content: '\f005';
+        font-family: "Font Awesome 5 Free";
+        font-weight: 900;
+        font-size: 2em;
+    }
+
+    hr.star-light:after {
+        color: #fff;
+        background-color: inherit;
+    }
+    hr.star-dark:after {
+        background-color: white;
+    }
+
+
+footer{
+    bottom: 0px;
+    position: fixed;
+    z-index:1000;
+}
+.body-content
+{
+ padding-top:1em;
+}
+
+.content section:first-of-type{
+ margin-top:-1em;
+}
+
+section.w-100{
+ margin-left:-15px;
+ margin-right:-15px;
+ width: unset !important;
+}
+/*
+.flip{
+ margin:auto;
+}
+.flip .pg{
+ background-color:white;
+ background:url('/images/loading.gif') center no-repeat;
+ position:absolute;
+}
+.fore{
+ width:100%; 
+ height:100%; 
+}
+.p-temporal{
+ background-color:#fff;
+ width:auto !important;
+}
+
+.flip > img {
+    max-height: 95%;
+    max-width: 95%;
+    position: relative;
+}
+
+.flip{
+  position:relative;
+  overflow:hidden;
+  width: 100%;
+  height: 100%;
+  margin: auto;
+  text-align: initial;
+  z-index:1
+ }
+.flip img{
+ position:absolute;
+ width:100%; 
+ height:100%; 
+ background-color:#fff;
+ background:url('/images/loading.gif') center no-repeat;
+}
+*/
+/*
+
+.doc-col{
+ border-right: 1px solid #d4d4d5;
+ border-bottom: 1px solid #d4d4d5;
+ position:initial !important;
+ z-index:1
+}
+
+.doc-col:empty{
+ border: none;
+}
+*/
+.doc-col{
+ width:300px;
+}
+.doc-col >div{
+ padding-bottom:2rem;
+}
+
+.doc-list .caption{
+ background-color: rgba(255,255,255,0.5);
+ width:100%;
+ text-align:center;
+}
+
+/**** PDF ****/
+
+#fore{
+ position:relative;
+ width:100%;
+ height:auto;
+}
+
+.pf { /* page */
+  image-rendering:auto;
+  position:relative;
+  background:white;
+  overflow: hidden;
+  margin:2px; 
+  border:0; /* required by pdf2htmlEX.js for page visibility test */
+/*  box-shadow: 0px 5px 20px 7px #a8a9a9a9;*/
+  /* Needed by IE to make box-shadow works * https://developer.mozilla.org/en-US/docs/Web/CSS/box-shadow */
+  border-collapse: separate;
+  margin-bottom:1em;
+}
+.pf img, .pf object {
+ width: 100%;
+}
+
+#page-container a{
+    right: 0px;
+    position: absolute;
+    margin-top: -6rem;
+    width: 100%;
+}
+
+#page-container {
+ position: relative;
+}
+#page-container a.marked:after
+{
+    font-family: "Font Awesome 5 Free";
+    content: "";
+    font-size: 2rem;
+    padding: 0.5rem;
+    position: absolute;
+    right: 0.0rem;
+    margin-top: 5.7rem;
+    display: inline-block;
+    z-index: 1;
+    -webkit-font-smoothing: antialiased;
+    font-style: normal;
+    font-variant: normal;
+    text-rendering: auto;
+    line-height: 1;
+    color: steelblue;
+    font-weight: 900;
+    opacity: 0.5;
+}
+
+
+#doc_container
+{
+ position: relative;
+}
+.doc_container_normal{
+ margin-left:-15px;
+ margin-right:-15px;
+}
+
+
+/*
+.epub-view{
+ height:initial !important;
+ width:initial !important;
+}
+.epub-view iframe{
+ height:initial !important;
+ width:100% !important;
+}
+*/
+
+#page-scroller{
+ display:inline-block;
+ position: absolute;
+ left:0px;
+ bottom:-0.5rem;
+ font-size:2.3rem;
+}
+#page-scroller *{
+ width: 3rem;
+ text-align: center;
+ color: white;
+ padding:0.2rem;
+}
+#page-scroller-spacer{
+ display:inline-block;
+ width:7rem;
+}
+.card
+{
+ background-color: inherit;
+}
+
+.special-text {
+  position: relative;
+  max-height: 150px;
+  overflow: hidden;
+  transition: max-height 1s ease;
+  
+}
+.special-text.-expanded {
+  max-height: inherit;
+}
+
+.special-text:not(.-expanded)::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(rgba(255, 255, 255, 0), rgba(255, 255, 255, 1));
+}

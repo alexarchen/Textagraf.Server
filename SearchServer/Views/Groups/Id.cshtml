@@ -1,0 +1,184 @@
+﻿@model SearchServer.Models.GroupModel
+@using Microsoft.AspNetCore.Identity;
+@inject SignInManager<User> _smngr;
+@{
+    ViewData["Title"] = Model.Name;
+    ViewData["Description"] = Model.Description;
+    ViewData["og:image"] = Model.ImageUrl ?? "/images/no_avatar.png";
+}
+
+
+
+<div id="app" class="group" style='visibility:hidden' :class="'group visible'">
+
+    <div class="row justify-content-between bg-primary text-white pt-2 pb-2">
+        <div class="col-sm-2 thumb-small text-center">
+            <img class="mr-3 img-thumbnail" src="@(Model.ImageUrl??"/images/group.png")" alt="Group @Model.Name">
+        </div>
+        <div class="col-sm text-center">
+            <h1 class="mt-0">
+                @Model.Name @if (Model.Type == Group.GroupType.Private)
+                {<span class="badge badge-secondary"><i class="fas fa-lock"></i></span>}
+            </h1>
+            <h5>
+                @Html.DisplayFor(model => model.Description)
+            </h5>
+
+        </div>
+    </div>
+
+    <div>
+        <span class="h4">{{subscribers.length}}</span> subsribers
+        <users-list :users="subscribers"></users-list>
+    </div>
+
+    <div>
+        <span class="h4">{{participants.length}}</span> participants
+        <users-list :users="participants"></users-list>
+    </div>
+
+    @if ((Model.Tags != null) && (Model.Tags.Length > 0))
+    {
+        <ul class="navbar p-0">
+            <li class="navbar-nav m-2"><a href="@(Model.UniqueName!=null?Url.Action("Name",new { Name = Model.UniqueName}):Url.Action("Id",new { Id = Model.Id}))">Home</a></li>
+            @foreach (string tag in Model.Tags.Split(";"))
+            {
+                <li class="navbar-nav m-2"><a href='@(Model.UniqueName!=null?Url.Action("Name",new { Name = Model.UniqueName}):Url.Action("Id",new { Id = Model.Id}))#@tag'>#@tag</a></li>
+            }
+        </ul>
+    }
+
+    <div>
+        @if (_smngr.IsSignedIn(User))
+        {
+            <a @Html.Raw(ViewBag.IsAdmin ? "" : "v-if='is_participant'") href="@Url.Action("Create", "Documents", new { GroupId = Model.Id, returnUrl = Context.Request.Path })" class="btn btn-primary">Publish</a>
+
+            @if ((!ViewBag.IsAdmin) && (Model.Type != Group.GroupType.Blog) && (Model.Type != Group.GroupType.Personal))
+            {
+                <a v-on:click.prevent="part" class="btn btn-primary" href="">{{partbtntext}}</a>
+            }
+            @if ((!ViewBag.IsAdmin) && (Model.Type != Group.GroupType.Private) && (Model.Type != Group.GroupType.Personal))
+            {
+                <a v-if="!is_participant" v-on:click.prevent="sub" class="btn btn-primary" href="">{{subbtntext}}</a>
+            }
+
+        }
+    </div>
+    <div class="d-flex">
+
+        @if (ViewBag.CanEdit)
+        {
+            <div class="btn-lg"><a asp-action="Edit" asp-route-id="@Model.Id" title="Edit Group"><i class="fas fa-edit"></i></a></div>
+        }
+        <a class="text-secondary btn-lg" href="#Comments"><i class="far fa-comment"></i></a>
+        <div class="dropdown btn-lg">
+            <a class="text-secondary" href="#" role="button" id="dropdownShare" data-toggle="dropdown" aria-haspopup="false" aria-expanded="false">
+                <i class="fas fa-share-alt"></i>
+            </a>
+            <div class="dropdown-menu" aria-labelledby="dropdownShare">
+                @await Html.PartialAsync("_Share")
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    $(function () {
+
+        window.history.replaceState({}, "Groups/@Model.Id",'@Context.Request.Path');
+
+        var app = new Vue({
+            el: "#app",
+            data: {
+                subscribers:  @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Admins.Concat(Model.Subscribers).ToList())),
+                participants: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Admins.Concat(Model.Participants).ToList())),
+                is_subscribed: @(ViewBag.IsSubscribed.ToString().ToLower()),
+                is_participant: @(ViewBag.IsParticipant.ToString().ToLower())
+              },
+            computed:
+            {
+                subbtntext: {
+                    get: function () { return this.is_subscribed?"Unsubscribe":"Subscribe"}
+                },
+                partbtntext: {
+                    get: function () { return this.is_participant? "Exit group" : "Participate" }
+                }
+            },
+            methods: {
+                sub: function () {
+                    var app = this;
+                    $.ajax({
+                        url: "/api/Groups/Subscribe/@Model.Id", type: "PUT", dataType: 'json', success: function (data) {
+                            if (data.error) alert(data.error);
+                            app.subscribers = data.Subscribers;
+                            app.is_subscribed = data.IsSubscribed;
+                            VueBus.$emit("user-state-changed", data.User);
+                        }
+                    });
+                },
+                part: function () {
+                    var app = this;
+                    $.ajax({
+                        url: "/api/Groups/Participate/@Model.Id", type: "PUT", success: function (data) {
+                            if (data.error) alert(data.error);
+                            app.participants = data.Participants;
+                            app.is_participant = data.IsParticipant;
+                            VueBus.$emit("user-state-changed", data.User);
+                        }
+                    });
+                }
+
+            }
+        });
+    })
+
+</script>
+
+@if (Model.body.Length>0)
+{
+<section class="mt-1" >
+    <div class="special-text">
+    @Html.Raw(Model.body)
+    </div>
+    <button class="expand-button btn btn-sm btn-secondary">
+        Read more
+    </button>
+</section>
+}
+<h3>@(Model.Documents.Count) Documents</h3>
+@if (!ViewBag.CanRead)
+{
+    <p>You can't read this group</p>
+}
+<partial name="_DocsListPartial" model="Model.Documents.Take(24).ToList()" />
+
+@if (ViewBag.CanRead)
+{
+
+    <h3>Comments</h3>
+    <div id="comments">
+        <comments :user="user" can-del="@ViewBag.CanEdit" url="@Url.RouteUrl("GroupComments",new { Id=Model.Id})" can-post="@ViewBag.CanPostComment.ToString().ToLower()" del-url="/api/groups/Comments/" post-url="@Url.RouteUrl("PostGroupComment", new { Id = Model.Id })" v-on:comments-changed="comchanged"></comments>
+        <a name="Comments"></a>
+    </div>
+
+
+    <script src="~/js/comments.js"></script>
+
+    <script>
+
+    var comments = new Vue({
+        el: '#comments',
+        data: {
+            user: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.User))
+        },
+        methods: {
+            comchanged: function (cmts) {
+
+            }
+        }
+    });
+
+    </script>
+}
+

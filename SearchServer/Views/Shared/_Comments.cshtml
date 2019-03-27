@@ -1,0 +1,34 @@
+@using SearchServer.Models
+@foreach (CommentModel c in Model)
+{
+    
+<div class="media thumb-xxs" id="cmt@(c.Id)">
+    <img class="mr-3 media-object img-thumbnail" src="@c.Document.Thumbnail" alt="@c.Document.Title">
+    <div class="media-body">
+     <h4>@c.Document.Title</h4>
+     <div class="media thumb-xxs" id="cmt@(c.Id)">
+      <img class="mr-3 media-object img-thumbnail" src="@c.User.Image" alt="User @c.User.Name">
+        <div class="media-body">
+
+
+          <div class="media-heading">
+            <div class="author">@c.User.Name</div>
+            <div class="metadata">
+                <span class="date">@c.DateTime.ToString()</span>
+            </div>
+        </div>
+        <div class="media-text text-justify">
+            @c.Text
+        </div>
+
+        <div class="footer-comment">
+        </div>
+
+        </div>
+      </div>
+
+    </div>
+ </div>
+
+}
+

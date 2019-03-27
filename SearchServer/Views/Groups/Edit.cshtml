@@ -1,0 +1,126 @@
+﻿@model SearchServer.Models.GroupModel
+
+@{
+    ViewData["Title"] = "Edit";
+    ViewData["Headers"] = "<link href='/lib/cropper/cropper.css'  rel='stylesheet'/>";
+}
+
+<h2>Edit group @Model.Id</h2>
+
+<script src="~/lib/cropper/cropper.min.js"></script>
+
+<div class="row container" id="app">
+
+    <avatar url="@Model.Image" upload-url="@Url.Action("UploadAvatar", new { Id = Model.Id})" save-url="@Url.Action("SaveAvatar", new { Model.Id})" default-url="/images/group.png"></avatar>
+
+    <div class="col">
+        <form asp-action="Edit" id="form" data-ajax="true">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <div class="form-group">
+                <label asp-for="Name" class="control-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="UniqueName" class="control-label"></label>
+                <input asp-for="UniqueName" class="form-control" data-val-unique="Name already used" />
+                <span asp-validation-for="UniqueName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Description" class="control-label"></label>
+                <input asp-for="Description" class="form-control" />
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Tags" class="control-label"></label>
+                <input name="Tags" type="hidden" class="form-control" :value="tags.join(';')" />
+                <tags-list :items="tags"></tags-list>
+                <span asp-validation-for="Tags" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Type" class="control-label"></label>
+                <select asp-for="Type" class="form-control" asp-items="Html.GetEnumSelectList<Group.GroupType>()"></select>
+                <span asp-validation-for="Type" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label>
+                    Long description (optional, use <a href="https://wikipedia.org/wiki/Markdown">Markdown</a> to decorate)
+                    <textarea data-val="false" name="body" cols="80" rows="20">@Html.Raw(Model.body)</textarea>
+                </label>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-default" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="~/js/avatar.js?@(DateTime.Now.Ticks)"></script>
+
+<script>
+
+    new Vue({
+        el: "#app",
+        data: {
+
+           tags: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject((Model.Tags!=null?Model.Tags.Split(';'):new string[] { }))),
+
+        }
+    });
+
+</script>
+
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+<script>
+    $(function () {
+
+        var namevalid = true;
+        var initname = "@Model.UniqueName";
+        var lastname = "";
+
+        function ajaxcheckform(form, fn) {
+            var formData = new FormData(form);
+            formData.append("checkonly", "true");
+            $.ajax({
+                type: "POST",
+                url: form.action,
+                data: formData,
+                contentType: false,
+                processData: false,
+                cache: false,
+                complete: function (data) {
+                    var res = data.responseJSON;
+                    fn(data.responseJSON);
+                }
+
+            });
+        }
+
+        $.validator.addMethod("unique", function (value, element, params) {
+
+            if (element.name == "UniqueName") {
+                if (value != lastname)
+                    namevalid = true;
+                if (value!=initname)
+                 ajaxcheckform(element.form, function (data) {
+                    namevalid = (data["UniqueName"].Errors.filter(w => (w.errorMessage.indexOf("already exists") >= 0)).length == 0);
+                    $(element.form).validate().element(element);
+                });
+                lastname = value;
+                return namevalid;
+            }
+
+        });
+
+        $.validator.unobtrusive.adapters.add("unique", ["otherpropertyname"], function (options) {
+            options.rules["unique"] = "#" + options.params.otherpropertyname;
+            options.messages["unique"] = options.message;
+        });
+    })
+
+</script>

@@ -1,0 +1,73 @@
+@{
+    Layout = "";
+}
+<!DOCTYPE html>
+<html>
+@if ((ViewBag.flow != null) && (ViewBag.flow.Equals("vertical")))
+{
+    <head>
+        <style>
+            body {width:100%; height:100%;}
+            #fore {
+                position: relative;
+                width: 100%;
+                height: auto;
+            }
+
+            .pf {
+                image-rendering: auto;
+                position: relative;
+                background: white;
+                overflow: hidden;
+                margin: 2px;
+                border: 0;
+                box-shadow: 0px 5px 20px 7px rgba(14, 13, 13, 0.77);
+                border-collapse: separate;
+                margin-bottom: 1em;
+            }
+        </style>
+    </head>
+    <body>
+        @Html.Raw(ViewData["body"])
+    </body>
+}
+else
+{
+
+    <head>
+        <style>
+            body {
+                width: 100%;
+                height: 100%;
+            }
+            .textagrafdoc {
+                padding: 1%
+            }
+
+                .textagrafdoc > div {
+                    box-shadow: 0px 2px 15px 4px rgba(50, 50, 55, 0.24);
+                }
+        </style>
+    </head>
+
+    <body style='margin:0px; padding:0px; overflow:hidden;'>
+
+
+            <textagraf data-src="@Url.Action("Item", "docs", new { Id = ViewBag.Id})" data-href='@ViewBag.href' data-height="98vh"></textagraf>
+
+ 
+            @if ((ViewBag.title != null) && (ViewBag.title.Length > 0))
+            {
+                        <a class='doc-title' target='_top' href='@ViewBag.href'>
+
+                            <div style='text-decoration: none; line-height: 1.25em; max-height:2.5em; overflow: hidden; text-overflow: ellipsis'>@ViewBag.title</div>
+                        </a>
+
+
+            }
+
+        <script src='@Url.Content("~/js/api.js")' asp-append-version="true"></script>
+    </body>
+}
+
+</html>

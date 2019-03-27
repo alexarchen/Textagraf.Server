@@ -1,0 +1,17 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using SearchServer.Models
+
+@inject SignInManager<User> manager;
+@{Layout = "_layout.cshtml";}
+
+<div>
+    You can try search DEMO index.
+    @if (!manager.IsSignedIn(User))
+    {
+        <p>In order to create you own index please SignIn.</p>
+    }
+
+
+    <partial name="_SearchPartial2" />
+
+</div>

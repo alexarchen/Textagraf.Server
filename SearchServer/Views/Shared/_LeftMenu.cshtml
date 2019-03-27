@@ -1,0 +1,41 @@
+@model SearchServer.Models.UserModel;
+@{
+    List<(string title, string href)> menu = new List<(string, string)>(new (string, string)[] {
+
+("<i class='far fa-newspaper'></i> News",@Url.Action("Index","Home")),
+("<i class='far fa-user'></i> My Page","/@"+Model.Name),
+("<i class='fas fa-users'></i> Groups",@Url.Action("Groups","Users")),
+("<i class='far fa-address-book'></i> Subscribes",@Url.Action("Subscribes","Users")),
+("<i class='far fa-bookmark'></i> Bookmarks",@Url.Action("Bookmarks","Users")),
+("<i class='far fa-heart'></i> Likes",@Url.Action("Likes","Users")),
+("<i class='far fa-comment'></i> Messages",@Url.Action("Index","Messages")),
+("<i class='far fa-eye'></i> Views",@Url.Action("Views","Users")),
+("<i class='far fa-comment'></i> Discussions",@Url.Action("Comments","Users"))
+
+});
+
+}
+
+
+
+    @if (ViewData.ContainsKey("LeftMenu"))
+    {
+        menu.Insert(0, ("", ""));
+        menu.InsertRange(1, ((string, string)[])ViewData["LeftMenu"]);
+
+    }
+
+    @foreach ((string title, string href) m in menu)
+    {
+        if (m.title.Length == 0)
+        {
+            <hr />
+        }
+        else
+        {
+            <li class="nav-item @ViewData["LeftMenuItemClass"]"><a class="nav-link" href="@m.href">@Html.Raw(m.title)</a></li>
+        }
+
+    }
+
+

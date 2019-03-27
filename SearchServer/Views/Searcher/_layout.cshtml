@@ -1,0 +1,19 @@
+﻿
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+}
+@{
+    ViewData["Title"] = "Search Engine";
+}
+
+<h2>@ViewBag.UserName@(ViewBag.UserName.Length > 0 ? "'s" : "")@ViewData["Title"]</h2>
+
+@if (ViewData.ContainsKey("Error"))
+{
+    <div id='error'>@ViewData["Error"]</div>
+}
+
+@RenderBody()
+
+

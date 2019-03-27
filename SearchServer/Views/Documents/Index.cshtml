@@ -1,0 +1,151 @@
+﻿@model IEnumerable<SearchServer.Models.DocModel>
+
+@{
+    ViewData["Title"] = "Documents";
+}
+
+
+
+<div id="documents">
+
+    <h2>@ViewData["Title"]<a class="btn btn-sm" v-on:click="refresh()"><i class="fas fa-sync-alt"></i></a></h2>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    Document
+                </th>
+                <th>
+                    Group
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.DateTime)
+                </th>
+                <th>
+                    Process
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-for="doc in documents">
+                <td>
+                    <input type="checkbox" :name='"del_"+doc.Id' />
+                    <div class="col doc-thumb thumb-small">
+                        <a :href='"/Docs/item/"+doc.Id'>
+                            <img :src="'@Url.Link("GetDocThumb",new { Id = "$$$$", n = 1 })'.replace('$$$$',doc.Id)" />
+                        </a>
+                        <div class="title"><a :href='"/Docs/item/"+doc.Id' :class="(((doc.ProcessedState!=0) && (doc.ProcessedState!=@Document.PROCESS_START_VALUE))?'text-danger':'')">{{doc.Title}}</a></div>
+                    </div>                    
+                </td>
+                <td>
+
+
+                    <a v-if="doc.Group" :href='"/Groups/Id/"+doc.GroupId'>{{doc.Group.Name}}</a>
+
+                </td>
+                <td>
+                    {{doc.DateTime | formatDate }}
+                </td>
+                <td>
+
+                    <span v-if="((doc.ProcessedState != 0) && (doc.ProcessedState!=@Document.PROCESS_START_VALUE))" class="alert-danger">Error: {{doc.ProcessedState}}</span>
+                    <span v-if="(doc.ProcessedState==@Document.PROCESS_START_VALUE)" class="text-info">Started...</span>
+
+                    <div><a class="btn btn-sm btn-primary" :href='"docs/Edit/"+doc.Id'>Edit</a></div>
+                    <div><a class="btn btn-sm btn-warning" :href="'javascript:app.deletedoc(\''+doc.Id+'\')'">Delete</a></div>
+                    @if (User.IsInRole("Admin"))
+                    {
+                    <div><a class="btn btn-sm btn-secondary" :href="'javascript:app.procdoc(\''+doc.Id+'\')'">Process</a></div>
+                    }
+                    </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<button type="submit">Delete selected</button>
+
+<script>
+
+    Vue.filter('formatDate', function (value) {
+        if (value) {
+            return moment(String(value)).calendar();
+            /*var d = new Date(value);
+            var curr_date = d.getDate();
+            var curr_month = d.getMonth();
+            var curr_year = d.getFullYear();
+            return (curr_month + "/" + curr_date + "/" + curr_year);*/
+        }
+    });
+
+    window.setInterval(function () {
+        for (var doc in app.documents) {
+            if (app.documents[doc].ProcessedState == @Document.PROCESS_START_VALUE) {
+                // need refresh
+                app.refresh(app.documents[doc].Id);
+                break;
+            }
+        }
+            }, 4000);
+
+    
+    var app = new Vue({
+        el: '#documents',
+        data: {
+            @{ 
+                var set1 = new Newtonsoft.Json.JsonSerializerSettings();
+                set1.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+             }
+
+            documents: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(@Model,set1))
+            },
+        methods: {
+            getdoc: function(id) {
+                for (i = 0; i < this.documents.length; i++)
+                    if (this.documents[i].Id == id) return this.documents[i];
+               
+            },
+
+            procdoc: function (id) {
+                var doc = this.getdoc(id);
+
+                    doc.ProcessedState = @Document.PROCESS_START_VALUE;
+                    $.getJSON("api/docs/" + doc.Id + "/process");
+                },
+            refresh: function (id) {
+                var doc = this.getdoc(id);
+                 var vue = this;
+                if (doc) {
+
+                    $.getJSON("api/docs/item/" + doc.Id, function (data) {
+                        for (i = 0; i < vue.documents.length; i++)
+                            if (vue.documents[i].Id == doc.Id) {
+                                Object.assign(vue.documents[i],data); break;
+                            }
+                    })
+
+                }
+                else {
+                    $.getJSON("api/docs/list", function (data) {
+                        Object.assign(vue.documents, data);
+                    })
+                }
+            },
+            deletedoc: function (id) {
+                var doc = this.getdoc(id);
+
+                if (confirm("Are you sure to delete " + doc.Id + "?"))
+                    $.ajax({
+                        url: "/api/docs/" + doc.Id + "/delete", type: "DELETE", complete: function (data) {
+                            data = data.responseJSON;
+                            if (data.Status=='Ok') { app.documents.splice(app.documents.indexOf(doc), 1); }
+                        }
+                    });
+                }
+
+            }
+    });
+
+        
+</script>

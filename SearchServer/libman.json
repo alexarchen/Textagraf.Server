@@ -1,0 +1,63 @@
+{
+  "version": "1.0",
+  "defaultProvider": "cdnjs",
+  "libraries": [
+    {
+      "library": "jquery@3.3.1",
+      "destination": "wwwroot/js/jquery/"
+    },
+    {
+      "provider": "unpkg",
+      "library": "bootstrap@4.1.3",
+      "destination": "wwwroot/lib/bootstrap/"
+    },
+    {
+      "provider": "cdnjs",
+      "library": "jqueryui@1.12.1",
+      "destination": "wwwroot/lib/jqueryui/"
+    },
+    {
+      "provider": "cdnjs",
+      "library": "pdf.js@2.0.943",
+      "destination": "wwwroot/lib/pdf.js/"
+    },
+    {
+      "provider": "cdnjs",
+      "library": "vue@2.5.21",
+      "destination": "wwwroot/lib/vue/"
+    },
+    {
+      "provider": "cdnjs",
+      "library": "cropperjs@1.4.3",
+      "destination": "wwwroot/lib/cropper/"
+    },
+    {
+      "provider": "cdnjs",
+      "library": "rrssb@1.14.0",
+      "destination": "wwwroot/lib/rrssb/"
+    },
+    {
+      "provider": "cdnjs",
+      "library": "moment.js@2.23.0",
+      "destination": "wwwroot/lib/moment/"
+    },
+    {
+      "provider": "cdnjs",
+      "library": "slidebars@2.0.2",
+      "destination": "wwwroot/lib/slidebars/"
+    },
+    {
+      "provider": "cdnjs",
+      "library": "jquery.lazyload@1.9.1",
+      "destination": "wwwroot/lib/lazyload"
+    },
+    {
+      "provider": "cdnjs",
+      "library": "mark.js@8.11.1",
+      "destination": "wwwroot/lib/mark"
+
+    }
+   
+
+   ]
+}

@@ -1,0 +1,60 @@
+﻿@model SearchServer.Models.UserModel
+
+@{
+    ViewData["Title"] = "Edit " + @Model.Name;
+    ViewData["Headers"] = "<link href='/lib/cropper/cropper.css'  rel='stylesheet'/>";
+}
+
+<script src="~/lib/cropper/cropper.min.js"></script>
+
+<div id="app">
+
+    <avatar url="@Model.Image" upload-url="@Url.Action("UploadAvatar", new { Model.Id})" save-url="@Url.Action("SaveAvatar", new { Model.Id})" default-url="/images/no_avatar.png"></avatar>
+    @if (ViewBag.EmailConfirmed==false)
+    {
+     <div class="mt-2 mb-2"><form method="post" asp-area="Identity" asp-page="/Account/Manage/SendEmailConfirmation"><button class="btn btn-primary">Send Email Confirmation</button></form></div>
+    }
+    <div class="row">
+        <div class="col-md-6">
+
+            <form asp-action="Edit">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="form-group">
+                    <label asp-for="Name" class="control-label"></label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Info" class="control-label"></label>
+                    <input asp-for="Info" class="form-control" />
+                    <span asp-validation-for="Info" class="text-danger"></span>
+                </div>
+                @if (User.IsInRole("Admin"))
+                {
+                    <div class="form-group">
+                        <label asp-for="Banned" class="control-label"></label>
+                        <input asp-for="Banned" class="form-control" />
+                        <span asp-validation-for="Banned" class="text-danger"></span>
+                    </div>
+                }
+                <div class="form-group">
+                    <input type="submit" value="Save" class="btn btn-default" /> <a class='btn btn-secondary' asp-area="Identity" asp-page="/Account/Manage/ChangePassword" title="Change Password">Change Password</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+
+<script src="~/js/avatar.js?@(DateTime.Now.Ticks)"></script>
+<script>
+
+     var app = new Vue({
+      el: "#app",
+       data: {
+            user: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(@Model))
+        }
+    });
+
+</script>

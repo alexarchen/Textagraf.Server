@@ -1,0 +1,26 @@
+﻿@using Microsoft.AspNetCore.Identity
+@model SessionIndexModel
+@inject SignInManager<User> SignInManager
+@{Layout = "_layout.cshtml";}
+
+@if (Model.CanSearch)
+{
+
+    <partial name="_SearchPartial2" />
+
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <div>
+            Manage index
+            <div><button onclick="javascript: document.location.href='Searcher/Update'">Update</button></div>
+            <div><button onclick="javascript: document.location.href='Searcher/New'">Create New</button></div>
+        </div>
+    }
+
+
+}
+else
+{
+        <div>You can <button onclick="javascript: document.location.href='Searcher/New'">create</button> you first index or search in <a class="button" href="Searcher/Try">DEMO</a> index instead</div>
+            
+}

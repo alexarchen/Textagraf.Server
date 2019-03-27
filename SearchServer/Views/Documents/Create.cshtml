@@ -1,0 +1,164 @@
+﻿@model SearchServer.Models.DocModel
+
+@{
+    ViewData["Title"] = "Upload Document";
+}
+
+<h2>Upload Document</h2>
+@if (Model.GroupId != null)
+{
+<h3>to &ldquo;@Model.Group.Name&rdquo;</h3>
+}
+<div class="row">
+    <div class="col">
+        <form id="form" asp-action="Create" enctype="multipart/form-data" asp-antiforgery="true">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label class="btn btn-primary">
+                    Select PDF or EPUB document
+                    <input asp-for="Upload" class="form-control d-none" maxlength="50000000" onclick="this.value=null" onchange="upload_file(this)" />
+                </label>
+                <span asp-validation-for="Upload" class="text-danger"></span>
+                <div id="Uploaded" style='visibility:hidden' :class="'visible'">
+                    <span v-if="error!=''" class="text-danger">{{error}}</span>
+                    <span v-if="uploaded!=''" class="text-success">{{uploaded}}</span>
+                    <span v-if="doc.TempFileName!=''" class="text-success"><i class="fas fa-check-circle"></i></span>
+                </div>
+            </div>
+             <div v-if="visible" style='visibility:hidden' :class="'visible'">
+                <div class="form-group ">
+                    <label asp-for="Title" class="control-label"></label>
+                    <input v-model='doc.Title' asp-for="Title" class="form-control" />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+                <div class="form-group ">
+                    <label asp-for="Description" class="control-label"></label>
+                    <input v-model='doc.Description' asp-for="Description" class="form-control" />
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Tags" class="control-label"></label>
+
+                    <input name="Tags" type="hidden" class="form-control" :value="tags.join(';')" />
+                    <tags-list :items="tags" :hints="tags_list" horz=true></tags-list>
+
+                    <span asp-validation-for="Tags" class="text-danger"></span>
+
+                </div>
+                <div class="form-group">
+                    <label asp-for="Access" class="control-label"></label>
+                    <select asp-for="Access" class="form-control" asp-items="Html.GetEnumSelectList<Document.DocAccess>()"></select>
+                    <span asp-validation-for="Access" class="text-danger"></span>
+                </div>
+                <input v-model="doc.TempFileName" asp-for="TempFileName" type="hidden" id="TempFileName" />
+                <input asp-for="GroupId" type="hidden" />
+                <input name="returnUrl" type="hidden" value="@ViewBag.returnURL" />
+                <div class="form-group">
+                    <input type="submit" value="Upload" class="btn btn-default" />
+                </div>
+
+             </div>
+        </form>
+    </div>
+</div>
+
+<script>
+
+    var app = new Vue({
+        el: "#form",
+        data: {
+            doc: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model).Replace("null", "''")),
+            uploaded:'',
+            error: "",
+            filename: "",
+            tags: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject((Model.Tags!=null?Model.Tags.Split(';'):new string[] { }))),
+            tags_list: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject((Model.Group!=null&&Model.Group.Tags!=null?Model.Group.Tags.Split(';'):new string[] { })))
+        },
+        computed: {
+            visible: {
+                get: function () {
+                        return (this.doc.TempFileName != '');
+                    }
+                }
+            },
+        methods: {
+            dropfile: function () {
+
+                if (this.$data.doc.TempFileName != '')
+                    $.get("DropTempFile?" + this.$data.doc.TempFileName);
+            },
+            checkfile: function (name) {
+                name = name.toLowerCase();
+                
+                if ((name.lastIndexOf('.') >= 0) &&
+                    ((name.slice(name.lastIndexOf('.') == ".pdf"))
+                        || (name.slice(name.lastIndexOf('.') == ".epub")))) return true;
+                return false;
+            },
+            upload: function () {
+                //        $("#TempFileName").val("");
+                if (!this.checkfile(this.filename)) {
+                    this.filename = "";
+                    alert("File format not supported!");
+                    return;
+                }
+                this.$data.doc.TempFileName = "";
+                this.$data.uploaded = "";
+                this.$data.error = "";
+                //$("#Uploaded").html("");
+                var app = this;
+
+                $.ajax({
+                type: "POST",
+                    url: "@Url.Action("Upload")",
+                    data: $(this.$el).serializefiles(),
+                    cache: false,
+                    dataType: "json",
+                    contentType: false,
+                    processData: false,
+                    complete: function (data) {
+                        var res = data.responseJSON;
+                        if (res.error) {
+                            app.$data.error = res.error;
+                        }
+                        else {
+                            app.$data.doc.TempFileName = res.FileName;
+                            app.$data.doc.Title = app.$data.filename.slice(0, app.$data.filename.lastIndexOf('.'));
+                            $("#Upload").val("");
+                        }
+                    },
+                    xhr: function () {
+                        var xhr = new window.XMLHttpRequest();
+
+                        xhr.upload.addEventListener("progress", function (evt) {
+                            if (evt.lengthComputable) {
+                                var percentComplete = evt.loaded / evt.total;
+                                percentComplete = parseInt(percentComplete * 100);
+                                app.$data.uploaded = "Uploaded: " + percentComplete + '%';
+
+                            }
+                        }, false);
+
+                        return xhr;
+                    }
+                });
+
+            }
+
+        }
+
+    });
+
+    function upload_file(el) {
+
+        app.filename = el.value.slice(Math.max(el.value.lastIndexOf('\\'), el.value.lastIndexOf('/'))+1);
+
+        var form = $("#form");
+        var url = "Upload";
+        app.dropfile();
+        app.upload();
+    }
+
+
+</script>

@@ -1,0 +1,18 @@
+﻿@{
+    Layout = "_layout.cshtml";
+}
+
+<h2>Search</h2>
+
+<partial name="_SearchPartial2" />
+
+<div>Result:
+    <div id="result">
+        Searcher/Search/@ViewBag.UserName?q=@Context.Request.Query["q"]
+    </div>
+    </div>
+
+<script>$(function () {
+    $("#result").load("Searcher/Search/@ViewBag.UserName?q=@Context.Request.Query["q"]");
+    });
+</script>

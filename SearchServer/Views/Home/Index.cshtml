@@ -1,0 +1,13 @@
+﻿@{
+    ViewData["Title"] = null;
+}
+
+<h1>New</h1>
+@if (ViewBag.DisplayNotPersonal)
+{
+ <p>This may be interesting for you</p>
+
+}
+
+<partial name="_DocsListPartial" model="@Model" />
+

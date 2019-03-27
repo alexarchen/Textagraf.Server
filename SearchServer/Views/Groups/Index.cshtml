@@ -1,0 +1,43 @@
+﻿@model IEnumerable<SearchServer.Models.GroupModel>
+
+@{
+    ViewData["Title"] = "Groups";
+}
+@if (ViewBag.CanCreate)
+{
+    <p>
+        <a asp-action="Create" class="btn btn-primary">Create New</a>
+    </p>
+
+}
+<div>
+    <form action="Search" class="form-inline">
+        Filter: <input type="text" class="form-control" name="q" />
+    </form>
+</div>
+
+@foreach (var item in Model)
+{
+
+    <div class="media thumb-xxs">
+        <img src="@(item.ImageUrl!=null?item.ImageUrl:"/images/group.png")" class="mr-3 rounded-circle" />
+        <div class="media-body">
+            <a class='h4' href="@item.Link">@item.Name 
+            @if (item.Type==Group.GroupType.Private){ <span class="badge badge-secondary"><i class="fas fa-lock"></i></span>} </a>
+            <div>
+                <small class="text-muted">
+                    @item.Description
+                </small>
+            </div>
+        </div>
+    </div>
+
+
+}
+
+@if (ViewBag.CanCreate)
+{
+    <br>
+    <div><a class=" btn btn-secondary" href="@Url.Action("All")">All Groups</a></div>
+
+}

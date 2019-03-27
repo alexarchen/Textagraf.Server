@@ -1,0 +1,72 @@
+﻿@model SearchServer.Models.UserModel
+
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+<div class="media thumb-small" id="app">
+    <img class="mr-3 img-thumbnail" src="@(Model.ImageUrl??"/images/no_avatar.png")" alt="User @Model.Name">
+    <div class="media-body">
+        <h5 class="mt-0">@Model.Name</h5>
+        <div>Rating: @Model.Rating</div>
+        <div>@Model.Info</div>
+
+        <div><span class="h4">{{subscribers.length+1}}</span> subsribers</div>
+        @if (ViewBag.IsMy)
+        {
+            if (ViewBag.EmailConfirmed)
+            {
+                <div><a asp-action="Create" asp-controller="Documents" class="btn btn-primary">Publish</a></div>
+
+            }
+            else
+            {
+                <div><form method="post" asp-area="Identity" asp-page="/Account/Manage/SendEmailConfirmation"><button class="btn btn-primary">Send Email Confirmation</button></form></div>
+
+            }
+        }
+        else
+        {
+            <div><a v-on:click.prevent="click" class="btn btn-primary">{{btntext}}</a></div>
+        }
+        <div class="h4"><a asp-action="Edit" asp-route-id="@Model.Id" title="Edit Profile"><i class="fas fa-edit"></i></a></div>
+
+
+    </div>
+</div>
+
+<script>
+    $(function () {
+        var app = new Vue({
+            el: "#app",
+            data: {
+
+                subscribers: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Subscribers.ToList())),
+                is_subscribed: @(ViewBag.IsSubscribed.ToString().ToLower())
+
+              },
+            computed:
+            {
+                btntext: {
+                    get: function () { return this.is_subscribed?"Unsubscribe":"Subscribe"}
+                }
+            },
+            methods: {
+                click: function () {
+                    var app = this;
+                    $.getJSON("/api/Users/Subscribe/"+@Model.Id, function (data) {
+                        app.subscribers = data.Subscribers;
+                        app.is_subscribed = data.IsSubscribed;
+                        VueBus.$emit("user-state-changed", data.User);
+                    });
+                }
+            }
+        });
+    })
+
+</script>
+
+<h3>Documents</h3>
+<partial name="_DocsListPartial" model="Model.Documents.Take(20).ToList()" />
+
+

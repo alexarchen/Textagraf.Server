@@ -1,0 +1,32 @@
+﻿@model IEnumerable<SearchServer.Models.MessageModel>
+
+@{
+    ViewData["Title"] = "Messages";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<ul class="">
+    @foreach (var item in Model)
+    {
+    <li class="">
+        @switch (item.Type)
+        {
+            case Message.MessageType.Message:
+                <div><a href="@Url.RouteUrl("UserPage",new { Id = item.fromUserId})">@item.fromUser.Name</a>: @item.text</div>
+                break;
+            case Message.MessageType.ParticipateGroup:
+                <div>User <a href="@Url.RouteUrl("UserPage",new { Id = item.fromUserId})">@item.fromUser.Name</a> wants participate group <a href="@Url.Action("Id","Groups",new { Id = item.groupId})">@item.group.Name</a>. <a class="btn btn-primary btn-sm" href="">Accept</a><a class="btn btn-primary btn-sm" href="">Decline</a></div>
+                break;
+            case Message.MessageType.ParticipateGroupAccepted:
+                <div>Your request to participate <a href="@Url.Action("Id","Groups",new { Id = item.groupId})">@item.group.Name</a> accepted.</div>
+                break;
+            case Message.MessageType.ParticipateGroupDeclined:
+                <div>Your request to participate <a href="@Url.Action("Id","Groups",new { Id = item.groupId})">@item.group.Name</a> declined by group admin.</div>
+              break;
+
+        }
+    </li>
+        }
+
+ </ul>

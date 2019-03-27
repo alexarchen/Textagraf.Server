@@ -1,0 +1,18 @@
+﻿<div class="row">
+    @foreach (var doc in Model)
+    {
+    <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 col-12 col m-b-2 doc-col">
+        <a href="@Url.Action("Item","Documents",new { Id=doc.Id})">
+            <div class="doc-thumb">
+                <img src="@Url.Link("GetDocThumb",new { Id = doc.Id, n = 1 })" />
+            </div>
+        </a>
+        <div class="doc-title">
+         <div><a class='font-weight-light thumb-xxs' href="@Url.Action("Id","Users",new {Id=doc.User.Id})"><img class="rounded-circle" src="@(doc.User.ImageUrl!=null?doc.User.ImageUrl:"/images/no_avatar.png")"/>@doc.User.Name</a></div>
+         <div><a href="@Url.Action("Item","Documents",new { Id=doc.Id})">@doc.Title</a></div>
+         <div>@doc.Description</div>
+        </div>
+</div>
+    }
+
+</div>
