@@ -1,4 +1,4 @@
-#Textagraf Server
+# Textagraf Server
 Textagraf is open source multiplatform ASP.NET Core documental web server hosted on http://textagraf.com.
 Author: AlexArchen (Alexey Zakharchenko)
 
