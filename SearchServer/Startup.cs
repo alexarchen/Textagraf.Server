@@ -18,6 +18,8 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.Extensions.Logging;
 using Docodo;
 using Newtonsoft.Json.Serialization;
+using System.IO;
+using Microsoft.AspNetCore.DataProtection;
 
 namespace SearchServer
 {
@@ -75,6 +77,14 @@ namespace SearchServer
                 options.IdleTimeout = TimeSpan.FromSeconds(10);
                 options.Cookie.HttpOnly = true;
             });
+
+            Directory.CreateDirectory(Path.Combine(Configuration["Folders:Storage"],"keys"));
+            services.AddDataProtection()
+           // This helps surviving a restart: a same app will find back its keys. Just ensure to create the folder.
+            .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(Configuration["Folders:Storage"], "keys")))
+           // This helps surviving a site update: each app has its own store, building the site creates a new app
+           .SetApplicationName("Textagraf")
+           .SetDefaultKeyLifetime(TimeSpan.FromDays(90));
 
             //Microsoft.AspNetCore.Identity.UI.Services.IEmailSende
 
@@ -144,6 +154,7 @@ namespace SearchServer
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1).AddJsonOptions(options =>
             {
+                options.SerializerSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
                 options.SerializerSettings.ContractResolver = new DefaultContractResolver();
             }); 
 
@@ -190,6 +201,7 @@ namespace SearchServer
             
 
             Controllers.DocumentsController.DocFolder = Configuration["Folders:Docs"] + "/";
+            Controllers.StorageController.Folder = Configuration["Folders:Storage"];
             Controllers.HomeController.HelpUrl = Configuration["Help"];
 
             await Init(app.ApplicationServices.GetRequiredService<RoleManager<IdentityRole<int>>>(),

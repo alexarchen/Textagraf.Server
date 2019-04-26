@@ -19,6 +19,7 @@
 , true);
     }
     bool docLayout = ViewData["docLayout"] != null ? (bool)ViewData["docLayout"] : false;
+    bool native = Context.Request.Headers.ContainsKey("nativeApp");
 }
 <!DOCTYPE html>
 <html>
@@ -73,7 +74,7 @@
 <body>
 
     <partial name="_CookieConsentPartial" />
-    <header class="bg-dark w-100 sticky" id="main-menu">
+    <header class="bg-dark w-100 sticky @(native?"d-none":"")" id="main-menu">
         <nav class="navbar flex-nowrap navbar-dark justify-content-between">
             <a class="navbar-brand" href="/">T<span class="d-none d-sm-inline">extagraf</span><span class="collapse d-sm-none" id="navbarSupportedContent">extagraf</span></a>
             <div id="search" class="w-50"><partial name="_SearchPartial" /></div>
@@ -96,7 +97,7 @@
 
             <div class="login d-none d-lg-flex"><partial name="_LoginPartial"></div>
 
-            <button class="navbar-toggler @(docLayout?"d-xl-none":"")" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler @(docLayout ? "d-xl-none" : "")" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
         </nav>
@@ -177,11 +178,10 @@
         </div>
         <div id="docmenu">@Html.Raw(ViewData["docmenu"])</div>
     </header>
-
     <div class="container-fluid body-content @(docLayout?"bg-dark text-white":"")">
 
         <div class="row">
-            <div class="d-none @(docLayout?"":"col-2 d-lg-block")">
+            <div class="d-none @((docLayout || native)?"":"col-2 d-lg-block")">
                 <div class="sticky">
                     <ul class="left-menu navbar-nav ml-2">
                         @if (docLayout && (ViewBag.searchResult != null))
@@ -207,7 +207,7 @@
                     </ul>
                 </div>
             </div>
-            <div class="col-2 d-none @(docLayout?"":"d-xl-block")">
+            <div class="col-2 d-none @((docLayout || native)?"":"d-xl-block")">
                 @if (SignInManager.IsSignedIn(User))
                 {
                     <div class="sticky">

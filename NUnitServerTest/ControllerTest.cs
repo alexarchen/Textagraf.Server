@@ -275,7 +275,6 @@ namespace NUnitServerTest
             umngr = umngrMoq.Object;
             smngrMoq = new Mock<SignInManager<User>>(umngr, new Mock<IHttpContextAccessor>().Object, new Mock<IUserClaimsPrincipalFactory<User>>().Object, null, null, null);
 
-
             HttpContextMoq = new Mock<HttpContext>();
             HttpRequestMoq = new Mock<HttpRequest>();
             HttpResponseMoq = new Mock<HttpResponse>();

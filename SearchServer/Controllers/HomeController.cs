@@ -28,7 +28,7 @@ namespace SearchServer.Controllers
     /// </summary>
     public static class CACHE_VARS
     {
-        public static (string name,int time) FAV_DOCS_CACHE = ("FavDoclist",30);
+        public static (string name,int time) FAV_DOCS_CACHE = ("FavDoclist",300);
         public static (string name, int time) USERS_CACHE = ("UsersCache", 300);
 
         static HashSet<string> keyValues = new HashSet<string>();
@@ -284,9 +284,9 @@ namespace SearchServer.Controllers
             {
                 var user = await smngr.UserManager.GetUserAsync(User);
 
-                doclist = await Cache.CacheAsync(CACHE_VARS.FAV_DOCS_CACHE.name, CACHE_VARS.FAV_DOCS_CACHE.time, user.Id, async () =>  
+                doclist = await Cache.CacheAsync(CACHE_VARS.FAV_DOCS_CACHE.name, CACHE_VARS.FAV_DOCS_CACHE.time, user.Id, async () =>
                 {
-                
+
                     user = await _context.User.Include(u => u.Likes).ThenInclude(l => l.Document).ThenInclude(d => d.User)
                         .Include(u => u.AdminOfGroups).ThenInclude(ga => ga.Group).ThenInclude(g => g.Documents).ThenInclude(d => d.User)
                         .Include(u => u.Participate).ThenInclude(gu => gu.Group).ThenInclude(g => g.Documents).ThenInclude(d => d.User)
@@ -296,7 +296,7 @@ namespace SearchServer.Controllers
 
                     try
                     {
-                        doclist = user.GetAllGroupsList().Select(g => g.Documents.Where(d=>d.ProcessedState!=DocModel.PROCESS_START_VALUE).TakeLast(30))
+                        doclist = user.GetAllGroupsList().Select(g => g.Documents.Where(d => d.ProcessedState != DocModel.PROCESS_START_VALUE).TakeLast(30))
                            .Concat(user.SubscribesToUsers.Select(us => us.ToUser.Documents.Where(d => d.ProcessedState != DocModel.PROCESS_START_VALUE).TakeLast(30))).Aggregate((a, b) => a.Concat(b)).Distinct().OrderBy(d => d.Id).TakeLast(30).Select(d => new DocModel(d)).ToList();
                     }
                     catch (Exception e) { }
@@ -315,6 +315,11 @@ namespace SearchServer.Controllers
 
                 return View(doclist);
             }
+            else 
+             if (HttpContext.Request.Headers.ContainsKey("nativeApp"))
+             {
+                return RedirectToPage("/Account/Login", new { area = "Identity", returnUrl = HttpContext.Request.Path });
+             }
 
             doclist = await Cache.CacheAsync(CACHE_VARS.FAV_DOCS_CACHE.name, CACHE_VARS.FAV_DOCS_CACHE.time, 0, async () =>
             {
@@ -428,7 +433,8 @@ namespace SearchServer.Controllers
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier});
         }
     }
 }

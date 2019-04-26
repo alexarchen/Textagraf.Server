@@ -111,7 +111,7 @@ namespace SearchServer.Models
         public UserModel User { get; }
 
         public int ProcessedState { get; }
-        public bool IsReady { get => (Pages > 0) && (ProcessedState != Document.PROCESS_START_VALUE); }
+        public bool IsReady { get => ((Format==DocFormat.EPub) || (Pages > 0)) && (ProcessedState != Document.PROCESS_START_VALUE); }
 
         [Required]
         [MinLength(5)]

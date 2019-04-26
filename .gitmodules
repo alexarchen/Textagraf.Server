@@ -2,3 +2,6 @@ $ cat .gitmodules
 [submodule "docodo"]
       path = Docodo
       url = https://github.com/alexarchen/Docodo
+[submodule "Typography"]
+      path = Typography
+      url = https://github.com/LayoutFarm/Typography

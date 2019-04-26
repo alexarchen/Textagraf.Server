@@ -100,12 +100,14 @@ namespace SearchServer.Controllers
                     fieldrequest += $" {{{key}={HttpContext.Request.Query[key]}}} ";
                 }
             }*/
-            if (doc != null) return Redirect("/docs/Item/" + doc + "/q=" + q);
-
-            Regex.Replace(q, @"(#\w+)", (m) => "{Tags=" + m.Value.Substring(1) + "}");
-            if (group != null) q += " {GroupId=" + group + "} ";
-            if (doc != null) q += " {name=" + doc + "} ";
-
+            if (q == null) q = "";
+            else
+            {
+                if (doc != null) return Redirect("/docs/Item/" + doc + "/q=" + q);
+                Regex.Replace(q, @"(#\w+)", (m) => "{Tags=" + m.Value.Substring(1) + "}");
+                if (group != null) q += " {GroupId=" + group + "} ";
+                if (doc != null) q += " {name=" + doc + "} ";
+            }
           //  long t = Environment.TickCount;
 
             Index.SearchResult res = index.Search(q);

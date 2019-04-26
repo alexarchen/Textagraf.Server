@@ -1,10 +1,12 @@
 # Textagraf Server
 Textagraf is open source multiplatform ASP.NET Core documental web server hosted on http://textagraf.com.
+
 Author: AlexArchen (Alexey Zakharchenko)
 
 - REST architecture
-- MVC NET Core
-- Works with both PDFs and EPUB.
+- ASP .NET Core MVC
+- Entity Framework Core
+- Works with both PDF and EPUB
 - Converts PDF to html5
 - Uses DOCODO.NET as search engine
 
@@ -21,6 +23,6 @@ Textagraf Server can be built by using Microsoft Visual Studio 15 or more.
 All settings are placed in SearchServer/appsettings.json (sample in appsettings.Development.json)
 
 # Using
-Textagraf can be used as standalone Kestrel-base server on port 5000 or as IIS application.
+Textagraf can be used as standalone Kestrel-based server on port 5000 or as IIS application.
 
 

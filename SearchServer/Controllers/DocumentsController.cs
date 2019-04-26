@@ -54,6 +54,8 @@ namespace SearchServer.Controllers
         static public JsonError ERROR_USER_NOT_FOUND = new JsonError ("User not found" ,9);
         static public JsonError ERROR_ALREADY_EXISTS = new JsonError("Element already exists", 11);
 
+        static public JsonError ERROR_LIMIT_EXEEDED = new JsonError("Limit exeeded", 12);
+        static public JsonError ERROR_INVALID_PARAM = new JsonError("Invalid Param", 13);
 
         static public JsonError ERROR_UNKNOWN = new JsonError("Unexpected error", 10000000);
     }
@@ -516,7 +518,7 @@ namespace SearchServer.Controllers
 
         [HttpPost]
         [Authorize]
-        [ValidateAntiForgeryToken]
+//        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Upload([Bind("Upload")] DocModel docmodel)
         {
             User user = await _umngr.GetUserAsync(User);
@@ -797,6 +799,81 @@ namespace SearchServer.Controllers
             }
         }
 
+
+
+        [HttpPost("/api/docs/Create")]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<JsonResult> apiCreate([Bind("Title,Tags,Description,TempFileName,Access,GroupId")] DocModel docmodel,string returnURL,string accessToken)
+        {
+            if (ModelState.IsValid)
+            {
+                Document document = (Document)docmodel;
+                document.User = await _umngr.GetUserAsync(User);
+                if (!document.User.EmailConfirmed) return Json(JsonError.ERROR_ACCESS_DENIED);
+
+
+                if ((docmodel.TempFileName!=null) && (CheckFileFormat(docmodel.TempFileName)))
+                {
+                    long size = new FileInfo(_fileUploader.Folder + "/" + docmodel.TempFileName).Length;
+
+                    Models.Group group=null;
+                    if (docmodel.GroupId != null)
+                    {
+                        group = await _context.Group.Include(g=>g.Admins).Include(g=>g.Participants).FirstOrDefaultAsync(g => g.Id.Equals(docmodel.GroupId));
+                        docmodel.Group = new GroupModel(group);
+                    }
+                    document.User = await _context.User.Include(u => u.PayedSubscribes).Include(u => u.Documents).ThenInclude(d => d.Group).FirstAsync(u => u.Id.Equals(document.User.Id));
+                    bool b;
+                    // access rights
+                    if ((User.IsInRole("Admin")) || (docmodel.Group == null) || (GroupsController.CheckUserRightsToPost(group, document.User.Id, out b)))
+                    {
+                        // upload interval and space
+                        if (((docmodel.Group == null) && (CheckUploadIntervalLimit(document.User)))
+                            || ((docmodel.Group != null) && ((docmodel.Group.Type == Models.Group.GroupType.Private) || (CheckAllowedPrivateSpace(document.User, size)))))
+                        {
+                            document.Id = docmodel.TempFileName;
+                            document.Id = document.Id.Substring(0, document.Id.LastIndexOf('.'));
+                            string ext = docmodel.TempFileName.Substring(docmodel.TempFileName.LastIndexOf('.'));
+
+                            string folder = DocFolder + $"{document.User.Id}/{document.Id}";
+                            Directory.CreateDirectory(folder);
+                            System.IO.File.Move(_fileUploader.Folder + "/" + docmodel.TempFileName, folder + "/" + ext);
+                            document.File = $"{document.User.Id}/{document.Id}/{ext}";
+                            document.ProcessedState = Document.PROCESS_START_VALUE;
+                            document.DateTime = DateTime.UtcNow;
+                            document.Size = new System.IO.FileInfo(folder + "/" + ext).Length;
+
+                            _documentProcessor.ProcessDocument(folder + "/" + ext, (f, s, u) =>
+                            {
+                                Document doc = u.Document.Find(GetDocIdByFileName(f));
+                                doc.ProcessedState = s.Code;
+                                doc.Pages = s.nPages;
+                                doc.TitlePage = s.Title;
+                                u.Document.Update(doc);
+                                u.SaveChanges();
+                            });
+
+                            _context.Add(document);
+                            await _context.SaveChangesAsync();
+
+                            return Json(new DocModel(document));
+
+                        }
+                        return Json(JsonError.ERROR_LIMIT_EXEEDED);
+
+                    }
+                    else return Json(JsonError.ERROR_ACCESS_DENIED);
+                }
+                else return Json(JsonError.ERROR_FORMAT_NOT_SUP);
+
+            }
+
+            return Json(JsonError.ERROR_INVALID_PARAM);
+
+        }
+
+
         [Authorize]
         [HttpDelete("api/docs/{Id}/delete", Name = "DeleteDoc")]
         [Produces("application/json")]
@@ -902,9 +979,11 @@ namespace SearchServer.Controllers
             if (IsEPub)
                 res.opfUrl = Url.RouteUrl("GetDocBody", new { id = document.Id, act = _documentProcessor.GetDocHtml(DocFolder + document.File.Substring(0, document.File.LastIndexOf('/') + 1)) });
 
+            res.CanEdit = await CanUserEditDocument(document);
+            res.CanDelete = await CanUserDeleteDocument(document);
 
             string Host = HttpContext.Connection.RemoteIpAddress.ToString();
-            DateTime lastview = ((Document)document).Reads.LastOrDefault(r => (r.UserId == userId || ((r.UserId == null) && (r.Host == Host)))).DateTime;
+            DateTime lastview = ((Document)document).Reads?.LastOrDefault(r => (r.UserId == userId || ((r.UserId == null) && (r.Host == Host))))?.DateTime ?? DateTime.MinValue;
             if ((lastview == null) || (DateTime.UtcNow.Subtract(lastview).TotalHours > 24))
             {
                 document.Reads.Add(new DocumentRead() { Document = document, Host = Host, DateTime = DateTime.Now, UserId = userId });

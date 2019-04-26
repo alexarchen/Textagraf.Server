@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using NUnit.Framework;
 using SearchServer.Controllers;
 using SearchServer.Models;
@@ -10,14 +13,14 @@ using System.Threading.Tasks;
 
 namespace NUnitServerTest
 {
-    class UsersControllerTest: ControllerTest
+    class UsersControllerTest: ControllerTest, IAntiforgery
     {
         UsersController usersController;
 
         [SetUp]
         public void SetUp()
         {
-            usersController = new UsersController(GetContext(), umngr, this, memMoq.Object);
+            usersController = new UsersController(GetContext(), umngr, this, memMoq.Object,this);
         }
 
         [Test]
@@ -50,6 +53,59 @@ namespace NUnitServerTest
             _context.SaveChanges();
             */
 
+        }
+
+        class UserSignInResult : Microsoft.AspNetCore.Identity.SignInResult
+        {
+            public UserSignInResult(bool Success)
+            {
+                Succeeded = Succeeded;
+                IsLockedOut = false;
+                IsNotAllowed = Succeeded;
+                RequiresTwoFactor = false;
+            }
+        }
+
+        [Test]
+        async void apiLoginTest()
+        {
+            var _context = GetContext();
+
+            smngrMoq.Setup(c => c.PasswordSignInAsync(users[0].UserName, "TEST", true, false)).Returns(Task.FromResult((Microsoft.AspNetCore.Identity.SignInResult)new UserSignInResult(true)));
+            smngrMoq.Setup(c => c.PasswordSignInAsync("xxxxxxx", "TEST", true, false)).Returns(Task.FromResult((Microsoft.AspNetCore.Identity.SignInResult)new UserSignInResult(false)));
+
+            var res = await usersController.apiLogin(users[0].UserName, "test");
+            Assert.IsInstanceOf<UserModel>(((JsonResult)res).Value);
+
+            res = await usersController.apiLogin("xxxxxxxx","test");
+            Assert.IsInstanceOf<JsonError>(((JsonResult)res).Value);
+        }
+
+        int GetAndStoreTokensCall = 0;
+        public AntiforgeryTokenSet GetAndStoreTokens(HttpContext httpContext)
+        {
+            GetAndStoreTokensCall++;
+            return new AntiforgeryTokenSet("TEST", "COOKIE", "REQ", "HEAD");
+        }
+
+        public AntiforgeryTokenSet GetTokens(HttpContext httpContext)
+        {
+            return new AntiforgeryTokenSet("TEST", "COOKIE", "REQ", "HEAD");
+        }
+
+        public async Task<bool> IsRequestValidAsync(HttpContext httpContext)
+        {
+            return true;
+        }
+
+        public Task ValidateRequestAsync(HttpContext httpContext)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetCookieTokenAndHeader(HttpContext httpContext)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -1,21 +1,25 @@
 ﻿
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using SearchServer.Models;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SearchServer.Controllers
 {
     public partial struct JsonError
     {
-        static public JsonError ERROR_SELF = new JsonError ("Can't subscribe to self" , 10);
+        static public JsonError ERROR_SELF = new JsonError("Can't subscribe to self", 10);
 
     }
 
@@ -91,16 +95,14 @@ namespace SearchServer.Controllers
     public class UsersController : AvatarController
     {
         private readonly UserContext _context;
-        private readonly UserManager<User> _mngr;
-        private readonly IFileUploader _fileUploader;
         private readonly IMemoryCache _cache;
-
-
-        public UsersController(UserContext context, UserManager<User> mngr,IFileUploader fileUploader,IMemoryCache memoryCache):base(mngr,fileUploader,"user")
+        protected SignInManager<User> _smngr;
+        private IAntiforgery _antiforgery;
+        public UsersController(UserContext context, SignInManager<User> mngr,IFileUploader fileUploader,IMemoryCache memoryCache, IAntiforgery antiforgery) :base(mngr.UserManager,fileUploader,"user")
         {
             
             _context = context;
-            _mngr = mngr;
+            _smngr = mngr;
             _fileUploader = fileUploader;
             _cache = memoryCache;
         }
@@ -123,7 +125,7 @@ namespace SearchServer.Controllers
         {
             User user;
 
-            if ((_mngr.GetUserName(User).Equals(name)) || (User.IsInRole("Admin")))
+            if ((_mngr.GetUserName(User)?.Equals(name)??false) || (User.IsInRole("Admin")))
                 user = await _context.GetFullUserLinq().GetCached(_cache, (m) => m.Id).FirstOrDefaultAsync(m=>m.UserName.Equals(name));
             else
                 user = await _context.User.Include(u => u.Documents).ThenInclude(d => d.Likes).Include(u => u.Subscribers).ThenInclude(us => us.User)
@@ -151,6 +153,18 @@ namespace SearchServer.Controllers
         }
 
 
+        [Authorize]
+        public async Task<IActionResult> Self()
+        {
+            var user = await getUserById(GetUserId().Value);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            return outUser(user);
+
+
+        }
         //[HttpGet("Users/@{Name}", Name = "UserPage")]
         public async Task<IActionResult> Name(string name)
         {
@@ -454,6 +468,58 @@ namespace SearchServer.Controllers
 
             return Json(new { IsSubscribed = issub, new UserModel(user).Subscribers, User = new UserModel(me)});
 
+        }
+
+        [Authorize]
+        [HttpGet("api/Users/Self")]
+        public async Task<JsonResult> apiSelf()
+        {
+            var user = await getUserById(GetUserId().Value);
+
+            if (user == null)
+            {
+                return Json(JsonError.ERROR_NOT_FOUND);
+            }
+           
+            return Json(new UserModel(user));
+
+        }
+
+        [HttpPost("api/Users/Login")]
+        public async Task<JsonResult> apiLogin(string login, string password)
+        {
+            User user;
+            if (login.Contains("@"))
+            {
+                user = await _smngr.UserManager.FindByEmailAsync(login);
+            }
+            else
+                user = await _smngr.UserManager.FindByNameAsync(login);
+            if (user == null) return Json(JsonError.ERROR_USER_NOT_FOUND);
+
+            await Task.Delay(1000);
+
+            var res = await _smngr.PasswordSignInAsync(user, password, true, false);
+            if (res.Succeeded)
+            {
+                var tokens = _antiforgery.GetAndStoreTokens(HttpContext);
+                string AccessToken = tokens.RequestToken;
+
+                //HttpContext.Response.Headers["Set-Cookie"] += tokens.CookieToken+";";
+
+                foreach (var s in HttpContext.Response.Headers["Set-Cookie"])
+                {
+                    if (s.StartsWith(".AspNetCore.Identity.Application="))
+                    {
+                        string val = s.Split('=', ';')[1];
+                        string name = ".AspNetCore.Identity.Application";
+
+                        return Json(new { Token = val, TokenName = name, Status = "Ok", User=new UserModel(user), AccessToken});
+                    }
+                }
+            }
+
+            return Json(JsonError.ERROR_ACCESS_DENIED);
         }
 
         // GET: Users/[Id]
