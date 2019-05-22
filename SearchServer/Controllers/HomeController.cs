@@ -272,19 +272,13 @@ namespace SearchServer.Controllers
         }
 
 
-        public async Task<IActionResult> Index()
+        async  Task<List<DocModel>> GetDocList()
         {
-            List<DocModel> doclist = new List<DocModel>();
-
-            ViewBag.DisplayNotPersonal = false;
-
-            ViewData["FromCache"] = true;
-
             if (smngr.IsSignedIn(User))
             {
                 var user = await smngr.UserManager.GetUserAsync(User);
 
-                doclist = await Cache.CacheAsync(CACHE_VARS.FAV_DOCS_CACHE.name, CACHE_VARS.FAV_DOCS_CACHE.time, user.Id, async () =>
+                return await Cache.CacheAsync(CACHE_VARS.FAV_DOCS_CACHE.name, CACHE_VARS.FAV_DOCS_CACHE.time, user.Id, async () =>
                 {
 
                     user = await _context.User.Include(u => u.Likes).ThenInclude(l => l.Document).ThenInclude(d => d.User)
@@ -294,6 +288,7 @@ namespace SearchServer.Controllers
                         .Include(u => u.SubscribesToUsers).ThenInclude(us => us.ToUser).ThenInclude(u => u.Documents).ThenInclude(d => d.User)
                         .FirstOrDefaultAsync(u => u.Id.Equals(user.Id));
 
+                    List<DocModel> doclist = null;
                     try
                     {
                         doclist = user.GetAllGroupsList().Select(g => g.Documents.Where(d => d.ProcessedState != DocModel.PROCESS_START_VALUE).TakeLast(30))
@@ -302,33 +297,43 @@ namespace SearchServer.Controllers
                     catch (Exception e) { }
 
 
-                    if (doclist.Count < 24) // not subscribed jet
+                    if (doclist?.Count < 24) // not subscribed jet
                     {
-                        ViewBag.DisplayNotPersonal = true;
                         doclist = doclist.Concat(_context.Document.Include(d => d.User).Include(d => d.Likes).OrderBy(d => d.Rating).Where(d => d.ProcessedState != DocModel.PROCESS_START_VALUE).Take(100).Select(d => new DocModel(d, false)).TakeRandom(24 - doclist.Count).ToList()).ToList();
                     }
 
-                    ViewData["FromCache"] = false;
+                    
 
                     return doclist;
                 });
 
-                return View(doclist);
             }
-            else 
-             if (HttpContext.Request.Headers.ContainsKey("nativeApp"))
-             {
-                return RedirectToPage("/Account/Login", new { area = "Identity", returnUrl = HttpContext.Request.Path });
-             }
 
-            doclist = await Cache.CacheAsync(CACHE_VARS.FAV_DOCS_CACHE.name, CACHE_VARS.FAV_DOCS_CACHE.time, 0, async () =>
+            return await Cache.CacheAsync(CACHE_VARS.FAV_DOCS_CACHE.name, CACHE_VARS.FAV_DOCS_CACHE.time, 0, async () =>
             {
-                doclist = _context.Document.Include(d => d.Likes).Include(d => d.Group).Where(d => (d.GroupId == null) || (d.Group.Type == Group.GroupType.Blog) || (d.Group.Type == Group.GroupType.Open)).OrderBy(d => d.Rating).Include(d => d.User).Where(d => d.ProcessedState != DocModel.PROCESS_START_VALUE).Take(100).Select(d => new DocModel(d, false)).TakeRandom(10).ToList();
-                ViewData["FromCache"] = false;
-                return doclist;
+                return _context.Document.Include(d => d.Likes).Include(d => d.Group).Where(d => (d.GroupId == null) || (d.Group.Type == Group.GroupType.Blog) || (d.Group.Type == Group.GroupType.Open)).OrderBy(d => d.Rating).Include(d => d.User).Where(d => d.ProcessedState != DocModel.PROCESS_START_VALUE).Take(100).Select(d => new DocModel(d, false)).TakeRandom(10).ToList();
             });
 
-            return View("start", doclist);
+        }
+
+        public async Task<IActionResult> Index()
+        {
+            List<DocModel> doclist = await GetDocList();
+
+            ViewBag.DisplayNotPersonal = false;
+
+            ViewData["FromCache"] = true;
+            if (smngr.IsSignedIn(User))
+                return View(doclist);
+            else
+                return View("start", doclist);
+        }
+
+        [HttpGet("/api/Users/News")]
+        public async Task<IActionResult> apiIndex()
+        {
+            List<DocModel> doclist = await GetDocList();
+            return Json(doclist);
         }
 
         public IActionResult About()

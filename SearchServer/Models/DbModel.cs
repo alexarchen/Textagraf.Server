@@ -208,7 +208,7 @@ namespace SearchServer.Models
             Private =3,
             [Display(Name = "Blog")]
             Blog = 4,
-            [Display(Name ="Personal")]
+            [Display(Name ="Personal")] // mycloud
             Personal
         }
         public GroupType Type {get; set; }
@@ -517,7 +517,9 @@ namespace SearchServer.Models
 
         [Key]
         [Required]
-        public int Id { get; set; }
+        public long Id { get; set; }
+
+       // public long? ParentId { get; set; } // for later use
 
         public string DocumentId { get; set; }
         public Document Document { get; set; }
@@ -525,10 +527,12 @@ namespace SearchServer.Models
         public int? GroupId { get; set; }
         public Group Group { get; set; }
 
+        public int? ToUserId { get; set; }
+        public User ToUser { get; set; }
+
         public int UserId { get; set; }
         public User User { get; set; }
 
-        [MaxLength(2048)]
         [DataType(DataType.Html)]
         public string Text { get; set; }
 
@@ -651,6 +655,7 @@ public class Message
             builder.Entity<User>().HasMany<DocumentLike>(u => u.Likes).WithOne(dl => dl.User).OnDelete(DeleteBehavior.Cascade);
             builder.Entity<User>().HasMany<PayedSubscribe>(u => u.PayedSubscribes).WithOne(ps => ps.User).OnDelete(DeleteBehavior.Cascade);
             builder.Entity<User>().HasMany<Message>(u => u.Messages).WithOne(m => m.toUser).OnDelete(DeleteBehavior.Cascade);
+            builder.Entity<User>().HasMany<Comment>(u => u.Comments).WithOne(c => c.ToUser).OnDelete(DeleteBehavior.Restrict);
             // Group relations
             builder.Entity<Group>().HasMany<Document>(g=>g.Documents).WithOne(d=>d.Group).OnDelete(DeleteBehavior.SetNull);
             builder.Entity<Group>().HasMany<GroupAdmin>(g=>g.Admins).WithOne(a=>a.Group).OnDelete(DeleteBehavior.Restrict);

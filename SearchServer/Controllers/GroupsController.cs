@@ -46,6 +46,10 @@ namespace SearchServer.Controllers
             return View("Index",groups);
         }
 
+
+
+
+
         public async Task<IActionResult> Index()
         {
             ViewBag.CanCreate = false;
@@ -223,7 +227,8 @@ namespace SearchServer.Controllers
             if (System.IO.File.Exists(Path.Combine(StorageController.Folder, $"Groups/{@group.Id}.html")))
                 model.body = new MarkdownSharp.Markdown(new MarkdownSharp.MarkdownOptions() { AutoHyperlink = true }).Transform(System.IO.File.ReadAllText(Path.Combine(StorageController.Folder, $"Groups/{group.Id}.html")));
 
-            model.Documents = model.Documents.Where(d => d.IsReady).ToList();
+            if (!ViewBag.IsAdmin)
+             model.Documents = model.Documents.Where(d => d.IsReady).ToList();
 
             if (tags != null)
             {
@@ -382,13 +387,13 @@ namespace SearchServer.Controllers
             return View(gr);
         }
 
-        string ClearBodyHtml(string body)
+        public static string ClearBodyHtml(string body)
         {
-            body = body.Replace("<script", "<b>Error:</b><p");
-            body = body.Replace("/script>", "/p>");
-            body = body.Replace("<link", "<b>Error</b><p");
-            body = body.Replace("<style", "<b>Error:</b><p");
-            body = body.Replace("/style>", "/p>");
+            body = body.Replace("<script", "<b>Error:</b><p",StringComparison.OrdinalIgnoreCase);
+            body = body.Replace("/script>", "/p>", StringComparison.OrdinalIgnoreCase);
+            body = body.Replace("<link", "<b>Error</b><p", StringComparison.OrdinalIgnoreCase);
+            body = body.Replace("<style", "<b>Error:</b><p", StringComparison.OrdinalIgnoreCase);
+            body = body.Replace("/style>", "/p>", StringComparison.OrdinalIgnoreCase);
             return body;
         }
 
@@ -451,7 +456,7 @@ namespace SearchServer.Controllers
             group.ImageUrl = name;
             _context.Update(group);
             await _context.SaveChangesAsync();
-            return (new GroupModel(group).ImageUrl);
+            return (new GroupModel(group).Image);
         }
 
 
@@ -462,6 +467,15 @@ namespace SearchServer.Controllers
             string uid = _mngr.GetUserId(User);
             int? userId = uid != null ? (int?)int.Parse(uid) : null;
             return userId;
+        }
+
+        [HttpGet("api/Groups/All", Name = "AllGroups")]
+        [Produces("application/json")]
+        public async Task<IActionResult> apiAll()
+        {
+            var groups = await _context.Group.Where(g => g.Type != Group.GroupType.Personal).OrderBy(g => g.Rating).Take(100).Select(g => new GroupModel(g, false)).ToListAsync();
+
+            return Json(groups);
         }
 
 
@@ -479,12 +493,14 @@ namespace SearchServer.Controllers
             {
                 return Json(JsonError.ERROR_NOT_FOUND);
             }
-            ViewBag.CanPost = false;
-            ViewBag.CanEdit = false;
-            ViewBag.IsAdmin = false;
-            ViewBag.IsSubscribed = false;
-            ViewBag.IsParticipant = false;
-            ViewBag.CanRead = true;
+            GroupModelEx model = new GroupModelEx(@group);
+
+            model.CanPost = false;
+            model.CanEdit = false;
+            model.IsAdmin = false;
+            model.IsSubscribed = false;
+            model.IsParticipant = false;
+            model.CanRead = true;
 
 
             if (_smngr.IsSignedIn(User))
@@ -496,25 +512,25 @@ namespace SearchServer.Controllers
                 if (User.IsInRole("Admin") || (group.Admins.Where(ga => ((ga.GroupId == group.Id) && (ga.UserId == userId))).Count() > 0)
                     || ((group.Creator != null) && (group.Creator.Id.Equals(userId))))
                 {
-                    ViewBag.CanPost = true;
-                    ViewBag.CanEdit = true;
+                    model.CanPost = true;
+                    model.CanEdit = true;
                 }
                 else if (group.Participants.Where(gu => ((gu.GroupId == group.Id) && (gu.UserId == userId))).Count() > 0)
-                    ViewBag.CanPost = true;
+                    model.CanPost = true;
 
-                ViewBag.IsAdmin = (group.Admins.Where(ga => ((ga.GroupId == group.Id) && (ga.UserId == userId))).Count() > 0);
-                ViewBag.IsParticipant = ViewBag.IsAdmin || (group.Participants.Where(gs => ((gs.GroupId == group.Id) && (gs.UserId == userId))).Count() > 0);
-                ViewBag.IsSubscribed = ViewBag.IsAdmin || ViewBag.IsParticipant || (group.Subscribers.Where(gs => ((gs.GroupId == group.Id) && (gs.UserId == userId))).Count() > 0);
+                model.IsAdmin = (group.Admins.Where(ga => ((ga.GroupId == group.Id) && (ga.UserId == userId))).Count() > 0);
+                model.IsParticipant = ViewBag.IsAdmin || (group.Participants.Where(gs => ((gs.GroupId == group.Id) && (gs.UserId == userId))).Count() > 0);
+                model.IsSubscribed = ViewBag.IsAdmin || ViewBag.IsParticipant || (group.Subscribers.Where(gs => ((gs.GroupId == group.Id) && (gs.UserId == userId))).Count() > 0);
 
                 if ((!User.IsInRole("Admin")) && (!CheckUserRightsToRead(group, userId)))
                 {
-                    ViewBag.CanRead = false;
+                    model.CanRead = false;
                 }
             }
-            else ViewBag.CanRead = (User.IsInRole("Admin")) || CheckUserRightsToRead(group, null);
+            else model.CanRead = (User.IsInRole("Admin")) || CheckUserRightsToRead(group, null);
 
-            GroupModel model = new GroupModel(@group);
-            if (!ViewBag.CanRead)
+            
+            if (!model.CanRead)
             {
                 if (model.Type == Group.GroupType.Private)
                 {
@@ -526,7 +542,7 @@ namespace SearchServer.Controllers
             }
 
             model.Access = "" + (ViewBag.CanRead ? "Read " : "") + (ViewBag.CanPost ? "Post " : "") + (ViewBag.CanEdit ? "Edit " : "");
-             
+            
             if (System.IO.File.Exists(Path.Combine(StorageController.Folder, $"Groups/{group.Id}.html")))
                 model.body = System.IO.File.ReadAllText(Path.Combine(StorageController.Folder, $"Groups/{group.Id}.html"));
 

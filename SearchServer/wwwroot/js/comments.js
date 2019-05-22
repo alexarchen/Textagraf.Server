@@ -19,6 +19,7 @@
             }
         },
         template: `
+<div class='mb-3 comment'>
   <div class="media thumb-xxs" :id="'cmt'+id">
        <div class="align-self-start mr-3"><a :href='"/users/id/"+user.Id' :title="'User '+user.Name"><img class="mr-3 media-object rounded-circle" :src="userurl"></a>
        </div>
@@ -30,6 +31,8 @@
                 <span class="date">{{fdate}}</span>
             </div>
         </div>
+    </div>
+     </div>
         <div class="media-text text-justify" v-html="text">
         </div>
 
@@ -53,9 +56,7 @@
     </span>-->
 
         </div>
-
-    </div>
-    </div>
+</div>
 `
     });
 
@@ -64,11 +65,41 @@
         data: function(){
             return {
                 comments: [],
-                text: ""
+                text: "",
+                quill: {}
             }
         },
         props: ["canPost", "canDel","url", "postUrl","delUrl","vuebus","user"],
-        mounted: function () { this.load(); },
+        mounted: function () { 
+               this.load(); 
+              // quill for editing
+               quill = new Quill('#NewCommentText',
+              { theme: 'snow',
+  modules: {
+    toolbar: [
+
+          ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+          ['blockquote', 'code-block'],
+         //  [{ 'header': 1 }, { 'header': 2 }],               // custom button values
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+	  [{ 'script': 'sub'}, { 'script': 'super' }],      // superscript/subscript
+	  [{ 'indent': '-1'}, { 'indent': '+1' }],          // outdent/indent
+	  [{ 'direction': 'rtl' }],                         // text direction
+
+	//  [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+	//  [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+	//  [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+	//  [{ 'font': [] }],
+	   [{ 'align': [] }],
+	   ['image', 'video', 'formula','code-block'],
+	   ['clean']                                         // remove formatting button
+	    ]
+	  },
+           formats: "bold,italic,link,strike,underline,script,blockquote,indent,list,align,direction,image,code-block,formula,video",
+           placeholder:"Enter text here..."
+          });
+        },
         methods: {
             deletec: function(id){
                 if (confirm("Are you sure to delete comment?")){
@@ -109,6 +140,7 @@
             post: function () {
                 var cmts = this;
                 var fd = new FormData(this.$refs.form);
+                fd.set("Text",quill.root.innerHTML);
                 $.ajax(
                   {
                     type: "POST",
@@ -136,9 +168,9 @@
 <div>
         <comment v-for="c in comments" v-bind:text="c.Text" v-bind:id="c.Id" :key="c.Id" v-bind:nLikes="c.nLikes" v-bind:nDislikes="c.nDislikes" v-bind:date="c.DateTime" v-bind:user="c.User" :canDel="canDel||((user!=null) && (c.User.Id==user.Id))" v-on:delete="deletec(c.Id)"></comment>
         <form v-if="((canPost==true)||(canPost=='true'))" :action="postUrl" method="POST" v-on:submit.prevent="post" ref="form">
-            <div class="form-group">
-                <textarea v-model="text" cols='60' rows='5' class="form-control" name="Text"></textarea>
-            </div>
+            <div class="form-group bg-light">
+                <div  class="form-control" id="NewCommentText"></div>
+            </div><input type='hidden' name='Text'>
             <div class="form-group">
                 <button class="btn btn-primary" ref="postbutt">Post</button>
             </div>

@@ -10,7 +10,11 @@
     var set1 = new Newtonsoft.Json.JsonSerializerSettings();
     set1.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
 
+    ViewData["Headers"] = "<link href='/lib/quill/quill.snow.css'  rel='stylesheet'/>";
+
 }
+
+<script src="~/lib/quill/quill.js"></script>
 
 <div id="docapp">
 
@@ -195,7 +199,7 @@ function ReloadPages()
 //                    this.src = this.dataset["src"];
                     //this.style = this.dataset["style"];
                 });
-                
+
                 /*$(el).find("object").each(function () {
                         this.data = this.dataset["src"];
                         this.style = this.dataset["style"];
@@ -350,7 +354,7 @@ else
             <i v-if="iliked" class="fa fa-heart text-danger"></i>
            {{doc.Likes.length}}
         </a>
-        
+
         <div class="dropdown">
             <a class="" href="#" role="button" id="dropdownShare" data-toggle="dropdown" aria-haspopup="false" aria-expanded="false">
                 <i class="fas fa-share-alt"></i>
@@ -408,11 +412,13 @@ else
            mark: function (name) {
                var app = this;
                if (!name) {
+                   $('#bookmarksModal input').val("");
+                   $('#bookmarksModal input')[0].placeholder = "Page " + currPage;
                    $('#bookmarksModal').modal('show')
                    $('#bookmarksModal .btn-primary').one('click', function () {
 
                        // mark page
-                       app.mark($('#bookmarksModal input').val());
+                       app.mark($('#bookmarksModal input').val() || $('#bookmarksModal input')[0].placeholder);
                    });
                }
                else {
@@ -426,7 +432,7 @@ else
                             if (data.error) alert(data.error);
 
                            $("#page-container a[name=" + currPage + "]").addClass("marked");
-                           $("#page-container a[name=" + currPage + "]")[0].title += m+"\n";
+                           $("#page-container a[name=" + currPage + "]")[0].title += data.Name+"\n";
                             VueBus.$emit("user-state-changed", data.User);
                         }
                     });

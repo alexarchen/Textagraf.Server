@@ -105,6 +105,7 @@ namespace SearchServer.Controllers
             _smngr = mngr;
             _fileUploader = fileUploader;
             _cache = memoryCache;
+            _antiforgery = antiforgery;
         }
 
 
@@ -410,7 +411,7 @@ namespace SearchServer.Controllers
             user.ImageUrl = name;
             _context.Update(user);
             await _context.SaveChangesAsync();
-            return (new UserModel(user).ImageUrl);
+            return (new UserModel(user).Image);
         }
 
         /* API */
@@ -423,6 +424,7 @@ namespace SearchServer.Controllers
 
 
         // subscribe/unsubscribe
+        // TODO: POST with Aniforgery
         [HttpGet("api/Users/Subscribe/{Id}", Name = "SubscribeToUser")]
         [Authorize]
         public async Task<JsonResult> apiSubscribe(int id)
@@ -481,7 +483,10 @@ namespace SearchServer.Controllers
                 return Json(JsonError.ERROR_NOT_FOUND);
             }
            
-            return Json(new UserModel(user));
+            return Json(new UserModelEx(user) {
+                IsAdmin = User.IsInRole("Admin"),
+                IsMe = true
+            });
 
         }
 
@@ -534,8 +539,12 @@ namespace SearchServer.Controllers
                 return Json(JsonError.ERROR_NOT_FOUND);
             }
 
-           
-            return Json(new UserModel(user));
+            string idstr = _mngr.GetUserId(User);
+            return Json(new UserModelEx(user) {
+                IsAdmin = await _mngr.IsInRoleAsync(user,"Admin"),
+                IsMe = idstr==user.Id.ToString(),
+                IsSubscribed = user.Subscribers.Any(s=>s.UserId.ToString()== idstr)
+            });
 
         }
 

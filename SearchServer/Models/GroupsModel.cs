@@ -110,4 +110,24 @@ namespace SearchServer.Models
         public List<CommentModel> Comments { get; }
 
     }
+
+    public class GroupModelEx: GroupModel
+    {
+        public GroupModelEx(Group gr, bool collections = true) : base(gr, collections)
+        {
+
+        }
+
+        public bool CanEdit { get; set; }
+        public bool CanParticipate { get; set; }
+        public bool CanSubscribe { get; set; }
+
+        public bool IsSubscribed { get; set; }
+        public bool IsParticipant { get; set; }
+
+        public bool IsAdmin { get; set; }
+
+        public bool CanPost { get; set; }
+        public bool CanRead { get; set; }
+    }
 }

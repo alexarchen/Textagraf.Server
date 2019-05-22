@@ -87,4 +87,20 @@ namespace SearchServer.Models
 
     }
 
+    public class UserModelEx: UserModel
+    {
+        public UserModelEx(User user, bool collections = true):base(user,collections)
+        {
+
+        }
+        public bool CanEdit { get; set; }
+
+        public bool IsAdmin { get; set; }
+
+        public bool IsMe { get; set; }
+
+        public bool IsSubscribed { get; set; }
+
+    }
+
 }

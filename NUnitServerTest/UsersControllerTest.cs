@@ -20,7 +20,7 @@ namespace NUnitServerTest
         [SetUp]
         public void SetUp()
         {
-            usersController = new UsersController(GetContext(), umngr, this, memMoq.Object,this);
+            usersController = new UsersController(GetContext(), smngrMoq.Object, this, memMoq.Object,this);
         }
 
         [Test]

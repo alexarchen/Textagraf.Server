@@ -7,12 +7,12 @@ namespace SearchServer.Models
 {
     public class CommentModel
     {
-        public CommentModel(int? Id = null)
+        public CommentModel(long? Id = null)
         {
             this.Id = Id;
         }
 
-        public readonly int? Id;
+        public readonly long? Id;
 
         public CommentModel(Comment cmt)
         {

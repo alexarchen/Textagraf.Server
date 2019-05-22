@@ -38,7 +38,7 @@ namespace NUnitServerTest
                 controller = new GroupsController(
                 _context,
                 smngrMoq.Object,
-                memMoq.Object
+                memMoq.Object,this
                 );
 
             SetupController(controller);

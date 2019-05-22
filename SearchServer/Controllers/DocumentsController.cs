@@ -977,7 +977,9 @@ namespace SearchServer.Controllers
 
             res.Format = IsEPub ? DocModel.DocFormat.EPub : DocModel.DocFormat.Pdf;
             if (IsEPub)
-                res.opfUrl = Url.RouteUrl("GetDocBody", new { id = document.Id, act = _documentProcessor.GetDocHtml(DocFolder + document.File.Substring(0, document.File.LastIndexOf('/') + 1)) });
+                res.opfUrl = Url.RouteUrl("GetDocBody", new { id = document.Id, act = _documentProcessor.GetDocHtml(DocFolder + document.File.Substring(0, document.File.LastIndexOf('/') + 1)) });//TODO: ???
+
+            res.textUrl = Url.RouteUrl("GetDocBody", new { id = document.Id, act = "txtz"});
 
             res.CanEdit = await CanUserEditDocument(document);
             res.CanDelete = await CanUserDeleteDocument(document);
@@ -1001,7 +1003,6 @@ namespace SearchServer.Controllers
                     "LEFT JOIN dbo.[Group] AS g ON g.Id=d.GroupId WHERE d.Id = {0}";
 
         [HttpGet("api/docs/{Id}/body/{*act}", Name = "GetDocBody")]
-        [Produces("application/json")]
         public async Task<IActionResult> apiBody(string id, string act)
         {
             dynamic doc;
@@ -1041,7 +1042,7 @@ namespace SearchServer.Controllers
                 Stream stream = System.IO.File.OpenRead(filename);
                 if (!IsEPub)
                 {
-                    if (filename.EndsWith(".svgz",StringComparison.OrdinalIgnoreCase))
+                    if (filename.EndsWith("z",StringComparison.OrdinalIgnoreCase))
                      ControllerContext.HttpContext.Response.Headers.Add("Content-Encoding", "gzip");
                     
                     return File(stream, GetMimeByFileName(act));

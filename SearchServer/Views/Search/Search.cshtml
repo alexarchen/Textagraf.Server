@@ -5,21 +5,18 @@
     int c = 1;
 }
 
-<h2>Search</h2>
+
 
 @if (Model.Success)
 {
 <div class="search-results">
-    <h5>@Model.foundDocs.Count document(s)</h5>
+    <h5>Found @Model.foundDocs.Count document(s)</h5>
     <ul class="list-group">
         @foreach (var d in Model.foundDocs)
         {
-            <li class="media thumb-small mb-2">
-                <strong class="mr-3">@(c++).</strong><a href="@(Url.Action("Item", "Documents", new { Id = d.Name, pg = "q=" + (d.foundWords.Count==0?"":d.foundWords.Aggregate((a, b) => $"{a},{b}"))}))">
-                    <img src="@Url.Link("GetDocThumb", new { Id = d.Name, n = 1 })" />
-                </a>
-                                                     <div class="media-body container ml-3">
-                                                         <div class="row h4"><a class="col" href="@Url.Action("Item", "Documents", new { Id = d.Name })">@Html.Raw(d.headers["Title"])</a></div>
+            <li class="mb-2 list-unstyled">
+                                            <div class="ml-3">
+                                                <div class="row"><a class="col caption font-weight-bold" href="@Url.Action("Item", "Documents", new { Id = d.Name })">@(c++). @Html.Raw(d.headers["Title"])</a></div>
                                                          <div class="row">
                                                              @if (d.headers.ContainsKey("GroupId"))
                                                              {
@@ -39,24 +36,33 @@
                                                                      <div class="small">@user.Name</div>
                                                                  </div>
                                                              }
-                                                             <div class="col-auto">
-                                                                 <div class="h5">@Html.Raw(d.headers.ContainsKey("Tags") ? d.headers["Tags"].Split(";").Select(s => "#" + s.Trim()).Aggregate((a, b) => $"{a} {b}") : "")</div>
-                                                                 <div class="h6">@Html.Raw(d.headers.ContainsKey("DateTime") ? DateTime.Parse(d.headers["DateTime"]).FormatDate() : "")</div>
+                                                             <div class="col col-auto">
+                                                                 <div class="font-weight-bold">@Html.Raw(d.headers.ContainsKey("Tags") ? d.headers["Tags"].Split(";").Select(s => "#" + s.Trim()).Aggregate((a, b) => $"{a} {b}") : "")</div>
+                                                                 <div class="text-secondary">@Html.Raw(d.headers.ContainsKey("DateTime") ? DateTime.Parse(d.headers["DateTime"]).FormatDate() : "")</div>
                                                              </div>
                                                          </div>
-                                                         <div class="row summary mb-3"><div class="col">@Html.Raw(d.summary)</div></div>
-                                                         <div class="ml-3">
-                                                             @foreach (var p in d.pages.Take(3))
+                                                         <div class="row summary mb-3">
+                                                             <div class="col thumb-small"><a href="@(Url.Action("Item", "Documents", new { Id = d.Name, pg = "q=" + (d.foundWords.Count==0?"":d.foundWords.Aggregate((a, b) => $"{a},{b}"))}))">
+                                                                 <img align="left" class="mr-3" src="@Url.Link("GetDocThumb", new { Id = d.Name, n = 1 })" />
+                                                                 </a>
+                                                              @Html.Raw(d.summary)
+                                                             </div>
+                                                         </div>
+                                                            <div class="ml-3">
+                                                             @if (d.pages.Count > 1)
                                                              {
+                                                                 foreach (var p in d.pages.Take(3))
+                                                                 {
                                                              <div>
-                                                                 <div class="d-inline-block h4"><a href="@Url.Action("Item", "Documents", new { Id = d.Name })#@p.id"><i class="far fa-file-alt"></i> @p.id</a></div>
+                                                                 <div class="d-inline-block h6"><a href="@Url.Action("Item", "Documents", new { Id = d.Name })#@p.id"><i class="far fa-file-alt"></i> @p.id</a></div>
                                                                  @Html.Raw(p.text)
                                                              </div>
+                                                                 }
                                                              }
 
                                                              @if (d.pages.Count > 3)
                                                              {
-                                                                 <div class="h5">
+                                                                 <div class="h6">
                                                                      <a data-toggle="collapse" href="#doc_@(d.Name)_pages">
                                                                          +
                                                                          @foreach (var p in d.pages.Skip(3).Take(3))

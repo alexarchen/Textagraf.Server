@@ -32,7 +32,6 @@ namespace SearchServer
         //       (int w, int h)[] GetDocStructure(string file);
         string GetDocHtml(string dir);
         byte[] GetThumbnail(string file, int n, int crop=0);
-
     }
 
 
@@ -316,6 +315,32 @@ namespace SearchServer
 
                                //File.Delete($"{filedir}.djvu");
                                */
+
+                                // extract text
+                                try
+                                {
+                                    using (var f = File.Create(filedir + ".txtz"))
+                                    {
+                                        using (GZipStream str = new GZipStream(f, CompressionLevel.Optimal))
+                                        {
+                                            using (var strstr = new StreamWriter(str))
+                                            {
+
+                                                var pdf = new Docodo.DocumentsDataSource.IndexPDFDocument(filename, null);
+                                                foreach (var page in pdf)
+                                                {
+                                                    if (page.id != "0")
+                                                        strstr.Write(page.text + "\b");
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+
+                                }
+
                                 onfinish?.Invoke(filename, new ProcessResult() { Title = type, Code = exitCode, nPages = nPages }, _userContext);
                                 Console.WriteLine("Finish processing pdf document {0} with code {1}", filename, exitCode);
 

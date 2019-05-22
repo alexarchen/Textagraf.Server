@@ -2,7 +2,12 @@
 
 @{
     ViewData["Title"] = Model.Name;
+    ViewData["Headers"] = "<link href='/lib/quill/quill.snow.css'  rel='stylesheet'/>";
+
 }
+
+<script src="~/lib/quill/quill.js"></script>
+
 
 <div class="media thumb-small" id="app">
     <img class="mr-3 img-thumbnail" src="@(Model.ImageUrl??"/images/no_avatar.png")" alt="User @Model.Name">

@@ -89,7 +89,7 @@ namespace SearchServer.Controllers
                 {
                     return Json(JsonError.ERROR_ACCESS_DENIED);
                 }
-
+                Text = GroupsController.ClearBodyHtml(Text);
                 Comment comment = new Comment(Id,user.Id,Text);
                 _context.Comment.Add(comment);
                 await _context.SaveChangesAsync();
@@ -108,7 +108,7 @@ namespace SearchServer.Controllers
         public async Task<IActionResult> Create(int Id, [Bind("Text")] string Text)
         {
             //if (ModelState.IsValid)
-            if (Text.Length > 0)
+            if ((Text!=null) && (Text.Length > 0))
             {
                 User user;
                 if (signInManager.IsSignedIn(User))
@@ -145,7 +145,7 @@ namespace SearchServer.Controllers
         [HttpDelete("api/docs/Comments/{Id}",Name = "DeleteComment")]
         [HttpDelete("{Id}")]
         [Authorize]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> DeleteConfirmed(long id)
         {
             Comment comment;
             if (!User.IsInRole("Admin")) {
@@ -189,7 +189,7 @@ namespace SearchServer.Controllers
         }
 
 
-        private bool CommentExists(int id)
+        private bool CommentExists(long id)
         {
             return _context.Comment.Any(e => e.Id == id);
         }

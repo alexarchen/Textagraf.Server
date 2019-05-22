@@ -19,7 +19,7 @@
 , true);
     }
     bool docLayout = ViewData["docLayout"] != null ? (bool)ViewData["docLayout"] : false;
-    bool native = Context.Request.Headers.ContainsKey("nativeApp");
+    bool native = Context.Request.Headers.Keys.Any(k=>k.Equals("nativeApp",StringComparison.OrdinalIgnoreCase));
 }
 <!DOCTYPE html>
 <html>
@@ -230,15 +230,26 @@
 
             <div class="@(((!SignInManager.IsSignedIn(User)) && (Context.Request.Path.Value.Equals("/")))?"col-12":(docLayout?"col-12":"col-lg-10 col-xl-8")) content">
 
+                @{ 
+                    if (User.IsInRole("Admin"))
+                    {
+                        Html.Raw("<div>" + String.Concat(Context.Request.Headers.Keys, ",") + "</div>");
+                    }
+
+                }
+
                 @RenderBody()
             </div>
         </div>
 
         <hr />
     </div>
+    @if (!native)
+    {
     <footer class="bg-dark w-100 text-white-50">
 
-        @if (docLayout) {
+        @if (false)
+        {
         <div id="page-scroller">
             <i class="fas fa-arrow-up rounded-circle bg-dark" onclick="scroll_window(-1)"></i>
             <i class="fas fa-arrow-down rounded-circle bg-dark" onclick="scroll_window(1)"></i>
@@ -247,9 +258,9 @@
         }
 
         &copy; 2018 - Alex Archen
-        <span class="float-right mr-2"><a href="@Url.Action("Help","Home")">Help</a> | <a href="@Url.Action("Contact","Home")"> Support </a></span>
+        <span class="float-right mr-2"><a href="@Url.Action("Help", "Home")">Help</a> | <a href="@Url.Action("Contact", "Home")"> Support </a></span>
     </footer>
-
+    }
 
 
     @RenderSection("Scripts", required: false)

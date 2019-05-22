@@ -5,7 +5,11 @@
     ViewData["Title"] = Model.Name;
     ViewData["Description"] = Model.Description;
     ViewData["og:image"] = Model.ImageUrl ?? "/images/no_avatar.png";
+    ViewData["Headers"] = "<link href='/lib/quill/quill.snow.css'  rel='stylesheet'/>";
+
 }
+
+<script src="~/lib/quill/quill.js"></script>
 
 
 
@@ -135,16 +139,16 @@
 
 </script>
 
-@if (Model.body.Length>0)
+@if (Model.body.Length > 0)
 {
-<section class="mt-1" >
-    <div class="special-text">
-    @Html.Raw(Model.body)
-    </div>
-    <button class="expand-button btn btn-sm btn-secondary">
-        Read more
-    </button>
-</section>
+    <section class="mt-1">
+        <div class="special-text">
+            @Html.Raw(Model.body)
+        </div>
+        <button class="expand-button btn btn-sm btn-secondary">
+            Read more
+        </button>
+    </section>
 }
 <h3>@(Model.Documents.Count) Documents</h3>
 @if (!ViewBag.CanRead)

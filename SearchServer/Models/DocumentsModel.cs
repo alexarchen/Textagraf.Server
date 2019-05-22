@@ -76,6 +76,7 @@ namespace SearchServer.Models
         {
 
             Title = doc.Title;
+            Size = doc.Size;
             Tags = doc.Tags;
             GroupId = doc.GroupId;
             Access = doc.Access ?? Document.DocAccess.Open;
@@ -128,6 +129,8 @@ namespace SearchServer.Models
         public GroupModel Group { get; set; }
 
         public string Additional { get; set; }
+
+        public long Size { get; set; }
 
         public List<DocLikeModel> Likes { get; }
         public List<DocReadModel> Reads { get; }

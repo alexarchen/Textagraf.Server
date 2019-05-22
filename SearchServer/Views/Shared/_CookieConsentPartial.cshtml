@@ -2,7 +2,9 @@
 
 @{
     var consentFeature = Context.Features.Get<ITrackingConsentFeature>();
-    var showBanner = !consentFeature?.CanTrack ?? false;
+    bool showBanner = !consentFeature?.CanTrack ?? false;
+    bool native = Context.Request.Headers.Keys.Any(k=>k.Equals("nativeApp",StringComparison.OrdinalIgnoreCase));
+    if (native) { showBanner = false; }
     var cookieString = consentFeature?.CreateConsentCookie();
 }
 
