@@ -518,9 +518,11 @@ namespace SearchServer.Controllers
                 else if (group.Participants.Where(gu => ((gu.GroupId == group.Id) && (gu.UserId == userId))).Count() > 0)
                     model.CanPost = true;
 
-                model.IsAdmin = (group.Admins.Where(ga => ((ga.GroupId == group.Id) && (ga.UserId == userId))).Count() > 0);
-                model.IsParticipant = ViewBag.IsAdmin || (group.Participants.Where(gs => ((gs.GroupId == group.Id) && (gs.UserId == userId))).Count() > 0);
-                model.IsSubscribed = ViewBag.IsAdmin || ViewBag.IsParticipant || (group.Subscribers.Where(gs => ((gs.GroupId == group.Id) && (gs.UserId == userId))).Count() > 0);
+                model.IsAdmin = (User.IsInRole("Admin")) || (group.Admins.Where(ga => ((ga.GroupId == group.Id) && (ga.UserId == userId))).Count() > 0);
+                model.IsParticipant = model.IsAdmin || (group.Participants.Where(gs => ((gs.GroupId == group.Id) && (gs.UserId == userId))).Count() > 0);
+                model.IsSubscribed = model.IsAdmin || model.IsParticipant || (group.Subscribers.Where(gs => ((gs.GroupId == group.Id) && (gs.UserId == userId))).Count() > 0);
+                model.CanParticipate = (group.Type != Group.GroupType.Blog) && (group.Type != Group.GroupType.Personal);
+                model.CanSubscribe = (group.Type != Group.GroupType.Personal) && (group.Type != Group.GroupType.Private);
 
                 if ((!User.IsInRole("Admin")) && (!CheckUserRightsToRead(group, userId)))
                 {
@@ -541,7 +543,7 @@ namespace SearchServer.Controllers
                 }
             }
 
-            model.Access = "" + (ViewBag.CanRead ? "Read " : "") + (ViewBag.CanPost ? "Post " : "") + (ViewBag.CanEdit ? "Edit " : "");
+            model.Access = "" + (model.CanRead ? "Read " : "") + (model.CanPost ? "Post " : "") + (model.CanEdit ? "Edit " : "");
             
             if (System.IO.File.Exists(Path.Combine(StorageController.Folder, $"Groups/{group.Id}.html")))
                 model.body = System.IO.File.ReadAllText(Path.Combine(StorageController.Folder, $"Groups/{group.Id}.html"));

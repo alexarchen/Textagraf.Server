@@ -22,7 +22,7 @@ namespace SearchServer.Controllers
         public async Task<JsonResult> apiAdd(string id,string pg,string label)
         {
             int userid = GetUserId().Value;
-            Bookmark bm = new Bookmark() { DocumentId = id, Page = pg, Name = label, UserId = userid };
+            Bookmark bm = new Bookmark() { DateTime = DateTime.UtcNow, DocumentId = id, Page = pg, Name = label, UserId = userid };
             _context.Bookmark.Add(bm);
             await _context.SaveChangesAsync();
             return Json(new BookmarkModel(bm));

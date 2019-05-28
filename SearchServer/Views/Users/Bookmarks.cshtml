@@ -5,15 +5,13 @@
 }
 
 <h2>@ViewData["Title"]</h2>
-
-<table class="">
-    <thead><tr><td>Label</td><td>Document</td></tr></thead>
+<ul>
     @foreach (var item in Model)
     {
-
-        <tr class=""><td><a href="@Url.Action("Item","docs",new { Id = item.DocumentId})/#@item.Page">@item.Name</a></td><td>@item.Document.Title (@item.Page)</td></tr>
+        <li>
+          <a href="@Url.Action("Item","docs",new { Id = item.DocumentId})/#@item.Page">@item.Name in @item.Document.Title, p.@item.Page</a>
+        </li>
 
     }
-</table>
 
-
+</ul>

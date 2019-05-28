@@ -50,8 +50,11 @@ namespace SearchServer.Models
              Document = new DocModel(bm.Document,false);
             Name = bm.Name;
             Page = bm.Page;
+            DateTime = bm.DateTime;
         }
         public long Id { get; }
+
+        public DateTime DateTime {get; set;}
 
         public string DocumentId { get; }
         public DocModel Document { get;  }

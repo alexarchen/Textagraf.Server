@@ -291,7 +291,7 @@ namespace SearchServer.Controllers
                     List<DocModel> doclist = null;
                     try
                     {
-                        doclist = user.GetAllGroupsList().Select(g => g.Documents.Where(d => d.ProcessedState != DocModel.PROCESS_START_VALUE).TakeLast(30))
+                        doclist = user.GetAllGroupsList().Where(g=>g.Type!=Group.GroupType.Personal).Select(g => g.Documents.Where(d => d.ProcessedState != DocModel.PROCESS_START_VALUE).TakeLast(30))
                            .Concat(user.SubscribesToUsers.Select(us => us.ToUser.Documents.Where(d => d.ProcessedState != DocModel.PROCESS_START_VALUE).TakeLast(30))).Aggregate((a, b) => a.Concat(b)).Distinct().OrderBy(d => d.Id).TakeLast(30).Select(d => new DocModel(d)).ToList();
                     }
                     catch (Exception e) { }

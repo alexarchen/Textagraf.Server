@@ -78,6 +78,8 @@ namespace SearchServer.Models
 
         public readonly long Rating;
 
+        public string Link => "/@" + Name;
+
         public void Update(User user)
         {
             user.UserName = Name;
